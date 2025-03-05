@@ -95,6 +95,10 @@ void OutputRefMap() {
         return;
     }
 
+    mapFile << "#apvInfoMap actually maps key and value structs to eachother\n" ;
+    mapFile << "## the apvInfoKeys consists of: module id, axis(U/V depending on map), and  pos(along axis)\n";
+    mapFile << "## the apvInfoVals consists of: VTPcrate, Fiber(MPD) ID, and  the ADC channel\n\n";
+
     // Set column widths for formatting
     int colWidth = 10; // Adjust as needed for alignment
 
