@@ -132,8 +132,6 @@ struct UV_ROI{
 std::vector<UV_ROI> ROI_APV_map;
 
 
-
-
 int fN_APV25_CHAN = 128;
 int fMPDMAP_ROW_SIZE = 9;
 int MAXNSAMP_PER_APV;
@@ -486,7 +484,7 @@ Int_t extraReadDB(const TDatime& date ){
   // fAxis.resize( nstripsmax );
   
   }
-}
+
 
 
 
@@ -645,7 +643,7 @@ Int_t ReadDB(const TDatime& date ){
   // fAxis.resize( nstripsmax );
   
   }
-}
+
 
 
 //GEOMETRICAL PARAMETERS:
