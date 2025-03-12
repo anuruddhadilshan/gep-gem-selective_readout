@@ -1,11 +1,13 @@
 #include <iostream>
 
 #include "FindAPV.h"
-#include "SBSGEMModule.h"
+// #include "SBSGEMModule.h"
 // #include "THaSubDetector.h"
 // #include "ECalToHCal.h"
 
-// #include "FindGem.h"
+// #include "FindAPV.h"
+
+// #include "MakeAPVinfoMap.h"
 
 #include <fstream>
 #include <sstream>
@@ -14,90 +16,30 @@
 #include <map>
 #include <set>
 
+#include <numbers>
+
 // #include "TObject.h"
-#include "TString.h"
+// #include "TString.h"
 
-// #include "THaAnalysisObject.h"
-#include "TVector2.h"
-#include "TVector3.h"
 
-#include "TDatime.h"
-#include "THaEvData.h"
-#include "THaApparatus.h"
-#include "THaRun.h"
-#include "TRotation.h"
-#include "TH1D.h"
-#include "TH2D.h"
-#include "TF1.h"
-#include "TGraphErrors.h"
-#include "TClonesArray.h"
+// #include "TVector2.h"
+// #include "TVector3.h"
+
+// #include "TRotation.h"
+// #include "TH1D.h"
+// #include "TH2D.h"
+// #include "TF1.h"
+// #include "TGraphErrors.h"
+// #include "TClonesArray.h"
 #include <algorithm>
 #include <iomanip>
-
+#include <math.h>
 
 using namespace std;
 // using namespace SBSGEM;
-
 using namespace APVFindingSpace;
-// class APVFinder {
-// namespace APVFindingSpace {
-  //Based on SBSGEMModule
-  // using namespace APVFinder;
-  // using namespace APVFindingSpace;
-
-  // APVFinder::APVFinder(){};
-
-  APVFinder::APVFinder(int nAPV25_CHAN, int MPDMAP_ROW_SIZE, int MAXNSAMP_PER_APV, int MAX2DHITS, int APVmapping) 
-    : fN_APV25_CHAN(nAPV25_CHAN), 
-      fMPDMAP_ROW_SIZE(MPDMAP_ROW_SIZE), 
-      fMAXNSAMP_PER_APV(MAXNSAMP_PER_APV), 
-      fMAX2DHITS(MAX2DHITS), 
-      fAPVmapping(APVmapping) 
-  {
-      //Set default values for decode map parameters:
-  fN_APV25_CHAN = 128;
-  fMPDMAP_ROW_SIZE = 9;
-
-  //arrays to hold raw data from one APV card:
-  fStripAPV.resize( MAXNSAMP_PER_APV );
-  fRawStripAPV.resize( MAXNSAMP_PER_APV );
-  fRawADC_APV.resize( MAXNSAMP_PER_APV );
-
-  //default to 
-  //fMAX2DHITS = 250000;
-  fMAX2DHITS = 10000;
-
-  fAPVmapping = SBSGEM::kUVA_XY; //default to UVA X/Y style APV mapping, but require this in the database::
-
-  
-
-  fPxU = cos(UAngle);
-  fPyU = sin(UAngle);
-  fPxV = cos(VAngle);
-  fPyV = sin(VAngle);
 
 
-  ModPositionmap = {
-    //single module layers
-    {0, TVector3(0., 0., 0.)},
-    {1, TVector3(0., 0., 0.075)},
-    {2, TVector3(0., 0., 0.202)},
-    {3, TVector3(0., 0., 0.341)},
-    {4, TVector3(0., 0., 0.484)},
-    {5, TVector3(0., 0., 0.624)},
-
-    {6, TVector3(-.766, 0., 0.769)},
-    {7, TVector3(-.256, 0., 0.737)},
-    {8, TVector3(.265, 0., 0.769)},
-    {9, TVector3(.765, 0., 0.737)},
-    
-    {10, TVector3(-0.766, 0, 0.897)},
-    {11, TVector3(-0.256, 0, 0.865)},
-    {12, TVector3(0.256, 0, 0.897)},
-    {13, TVector3(0.765, 0, 0.865)}
-    };
-  };
-  
   APVFinder::APVFinder() 
   {
       //Set default values for decode map parameters:
@@ -116,45 +58,47 @@ using namespace APVFindingSpace;
   // fAPVmapping = SBSGEM::kUVA_XY; //default to UVA X/Y style APV mapping, but require this in the database::
   fAPVmapping = 2; 
 
-  fPxU = cos(UAngle);
-  fPyU = sin(UAngle);
-  fPxV = cos(VAngle);
-  fPyV = sin(VAngle);
+  // fPxU = cos(UAngle);
+  // fPyU = sin(UAngle);
+  // fPxV = cos(VAngle);
+  // fPyV = sin(VAngle);
 
+  nMods = 13; //number of modules
 
+  stripOffset = .004;
+
+  fUStripOffset=.004; fVStripOffset=.004;
   ModPositionmap = {
-    //single module layers
-    {0, TVector3(0., 0., 0.)},
-    {1, TVector3(0., 0., 0.075)},
-    {2, TVector3(0., 0., 0.202)},
-    {3, TVector3(0., 0., 0.341)},
-    {4, TVector3(0., 0., 0.484)},
-    {5, TVector3(0., 0., 0.624)},
+    {0, {0., 0., 0.}},
+    {1, {0., 0., 0.075}},
+    {2, {0., 0., 0.202}},
+    {3, {0., 0., 0.341}},
+    {4, {0., 0., 0.484}},
+    {5, {0., 0., 0.624}},
 
-    {6, TVector3(-.766, 0., 0.769)},
-    {7, TVector3(-.256, 0., 0.737)},
-    {8, TVector3(.265, 0., 0.769)},
-    {9, TVector3(.765, 0., 0.737)},
-    
-    {10, TVector3(-0.766, 0, 0.897)},
-    {11, TVector3(-0.256, 0, 0.865)},
-    {12, TVector3(0.256, 0, 0.897)},
-    {13, TVector3(0.765, 0, 0.865)}
-    };
+    {6, {-0.766, 0., 0.769}},
+    {7, {-0.256, 0., 0.737}},
+    {8, {0.265, 0., 0.769}},
+    {9, {0.765, 0., 0.737}},
+
+    {10, {-0.766, 0., 0.897}},
+    {11, {-0.256, 0., 0.865}},
+    {12, {0.256, 0., 0.897}},
+    {13, {0.765, 0., 0.865}}
+};
   };
 
 
-  void XY_ROI::print() const{
+  void APVFinder::XY_ROI::print() const{
     std::cout << "ECalBin: " << ECalBin << std::endl;
     std::cout << "GEMLayer: " << GEMLayer << std::endl;
-    std::cout << "xMin: " << xMin << std::endl;
-    std::cout << "yMin: " << yMin << std::endl;
-    std::cout << "xMax: " << xMax << std::endl;
-    std::cout << "yMax: " << yMax << std::endl;
+    std::cout << "xMin: " << xMin << " yMin: " << yMin << std::endl;
+    std::cout << "xMax: " << xMax << " yMax: " << yMax << std::endl;
     std::cout << "lineNumber: " << lineNumber << std::endl;
+    std::cout << "hitNumber: " << hitNumber << std::endl;
   };
 
-  void UV_ROI::print() const {
+  void APVFinder::UV_ROI::print() const {
     std::cout << "GEMLayer: " << GEMLayer << std::endl;
     std::cout << "MinModID: " << MinModID << std::endl;
     std::cout << "MaxModID: " << MaxModID << std::endl;
@@ -168,604 +112,421 @@ using namespace APVFindingSpace;
     std::cout << "vMaxAPVid: " << vMaxAPVid << std::endl;
   };
 
-  void gemInfo::print() const{
-    std::cout << "ModID: " << modID << std::endl;
-    // std::cout << "Layer: " << layer << std::endl;
+  void APVFinder::gemInfo::print() const{
+    // std::cout << "ModID: " << modID << std::endl;
+    std::cout << "Layer: " << layer << std::endl;
     std::cout << "APVmap: " << apvmap << std::endl;
-    std::cout << "Position: (" << position.X() << ", " << position.Y() << ", " << position.Z() << ")" << std::endl;
+    std::cout << "Position: (" << position[0] << ", " << position[1] << ", " << position[2] << ")" << std::endl;
     // std::cout << "Angle: (" << angle.X() << ", " << angle.Y() << ","
     // << angle.Z() << ")" << std::endl;
-    std::cout << "Size: (" << size.X() << ", " << size.Y() << ", " << size.Z() << ")" << std::endl;
-    std::cout << "Uangle: " << uangle << std::endl;
-    std::cout << "Vangle: " << vangle << std::endl;
-    std::cout << "Uoffset: " << uoffset << std::endl;
-    std::cout << "Voffset: " << voffset << std::endl;
-    std::cout << "NstripsU: " << nstripsu << std::endl;
-    std::cout << "NstripsV: " << nstripsv << std::endl;
-    std::cout << "UAPVs: " << NuAPVs << std::endl;
-    std::cout << "VAPVs: " << NvAPVs << std::endl;
+    std::cout << "Size: (" << size[0] << ", " << size[1] << ", " << size[2] << ")" << std::endl;
+    std::cout << "Uangle: " << uvangles[0] << std::endl;
+    std::cout << "Vangle: " << uvangles[1] << std::endl;
+    std::cout << "Uoffset: " << uvoffsets[0] << std::endl;
+    std::cout << "Voffset: " << uvoffsets[1] << std::endl;
+    std::cout << "NstripsU: " << nstripsuv[0] << std::endl;
+    std::cout << "NstripsV: " << nstripsuv[1] << std::endl;
+    std::cout << "UAPVs: " << NuvAPVs[0] << std::endl;
+    std::cout << "VAPVs: " << NuvAPVs[1] << std::endl;
   };
 
   // Define operator< for sorting in std::set
-  bool apvInfo::operator<(const apvInfo& other) const {
+  bool APVFinder::apvInfo::operator<(const apvInfo& other) const {
     if (gemid != other.gemid) return gemid < other.gemid;
     if (axis != other.axis) return axis < other.axis;
     return pos < other.pos;
   }
 
-  void apvInfo::print() const {
+  void APVFinder::apvInfo::print() const {
     std::cout << "GEMId: " << gemid << std::endl;
     std::cout << "Axis: " << axis << std::endl;
     std::cout << "Pos: " << pos << std::endl;
+    std::cout << "invert: " << invert << std::endl;
     std::cout << "VTPcrate: " << vtpcrate << std::endl;
     std::cout << "fiber: " << fiber << std::endl;
     std::cout << "adc_ch: " << adc_ch << std::endl;
   };
 
-  void printAPVinfoMap() {
-    std::cout << "Printing APV Info Map:\n";
-    for (const auto& [key, val] : apvInfoMap) {
-        std::cout << "GEMId: " << key.gemid << ", Axis: " << key.axis
-                  << ", Pos: " << key.pos << std::endl;
-        std::cout << "VTPcrate: " << val.vtpcrate << ", Fiber: " << val.fiber
-                  << ", ADC_ch: " << val.adc_ch << std::endl;
-        std::cout << "------------------------------------\n";
-    }
+  bool APVFinder::apvInfoKeys::operator<(const apvInfoKeys& other) const {
+    if (gemid != other.gemid) return gemid < other.gemid;
+    if (axis != other.axis) return axis < other.axis;
+    return pos < other.pos;
+}
+
+void APVFinder::apvInfoKeys::print() const {
+  std::cout 
+  << "GEMId: " << gemid 
+  << " Axis: " << axis 
+  << " Pos: " << pos 
+  << std::endl;
 };
 
+void APVFinder::apvInfoVals::print() const {
+  std::cout << "VTPcrate: " << vtpcrate 
+  << " Fiber: " << fiber 
+  << " ADC_ch: " << adc_ch 
+  << " invert? " << invert 
+  << std::endl; 
+};
+
+//   void APVFinder::printAPVinfoMap() {
+//     std::cout << "Printing APV Info Map:\n";
+//     for (const auto& [key, val] : apvInfoMap) {
+//         std::cout << "GEMId: " << key.gemid << ", Axis: " << key.axis
+//                   << ", Pos: " << key.pos << std::endl;
+//         std::cout << "VTPcrate: " << val.vtpcrate << ", Fiber: " << val.fiber
+//                   << ", ADC_ch: " << val.adc_ch << std::endl;
+//         std::cout << "------------------------------------\n";
+//     }
+// };
 
 
-  bool stripInfo::operator<(const stripInfo& other) const {
+
+  bool APVFinder::stripInfo::operator<(const stripInfo& other) const {
     if (stripNumber != other.stripNumber) return stripNumber < other.stripNumber;
     if (axis != other.axis) return axis < other.axis;
   };
 
-  void stripInfo::print() const {
-    std::cout << "StripNumber: " << stripNumber << std::endl;
+  void APVFinder::stripInfo::print() const {
+    std::cout << "\nStripNumber: " << stripNumber << std::endl;
     std::cout << "Axis: " << axis << std::endl;
     std::cout << "APV_ch: " << APV_ch << std::endl;
     std::cout << "MPD ID: " << mpd_id << std::endl;
     std::cout << "ADC ID: " << adcID << std::endl;
   };
 
+  void APVFinder::roiAPVinfo::print() const {
+    std::cout << "\nuMaxAPVinfoKeys: " << std::endl;
+    uMaxAPVinfoKeys.print();
+    std::cout << "\nuMaxAPVinfoVals: " << std::endl;
+    uMaxAPVinfoVals.print();
 
-
-Int_t APVFinder::extraReadDB(const TDatime& date ){
-  //Based on SBSGEMModule::ReadDatabase
-  std::cout << "[APVFinder::ReadDB]" << std::endl;
-
-  // hitmap_t thisHit;
-
-  // mpdmap_t thisHit; //from SBSGEMModule
-
-
-  Int_t status;
-
-  FILE* file = OpenFile( date );
-  if( !file ) return kFileError;
-
-  const DBRequest request[] =  {
-    { "chanmap",        &fChanMapData,        kIntV, 0, 0, 0}, // mandatory: decode map info
-    { "apvmap",         &fAPVmapping,    kUInt, 0, 1, 1}, //optional, allow search up the tree if all modules in a setup have the same APV mapping;
-
-    { "layer",          &fLayer,         kUShort, 0, 0, 0}, // mandatory: logical tracking layer must be specified for every module:
-    { "nstripsu",       &fNstripsU,     kUInt, 0, 0, 1}, //mandatory: number of strips in module along U axis
-    { "nstripsv",       &fNstripsV,     kUInt, 0, 0, 1}, //mandatory: number of strips in module along V axis
-    { "uangle",         &fUAngle,       kDouble, 0, 0, 1}, //mandatory: Angle of "U" strips wrt X axis
-    { "vangle",         &fVAngle,       kDouble, 0, 0, 1}, //mandatory: Angle of "V" strips wrt X axis
-    { "uoffset",        &fUStripOffset, kDouble, 0, 1, 1}, //optional: position of first U strip
-    { "voffset",        &fVStripOffset, kDouble, 0, 1, 1}, //optional: position of first V strip
-    { "upitch",         &fUStripPitch,  kDouble, 0, 0, 1}, //mandatory: Pitch of U strips
-    { "vpitch",         &fVStripPitch,  kDouble, 0, 0, 1}, //mandatory: Pitch of V strips
-  };
-
-  status = LoadDB( file, date, request, fPrefix, 1 ); //The "1" after fPrefix means search up the tree
-
-  // SetProjOps(UVangs);
-
-  fAPVch_by_Ustrip.clear();
-  fAPVch_by_Vstrip.clear();
-  fMPDID_by_Ustrip.clear();
-  fMPDID_by_Vstrip.clear();
-  fADCch_by_Ustrip.clear();
-  fADCch_by_Vstrip.clear();
-  
-
-  Int_t nentry = fChanMapData.size()/fMPDMAP_ROW_SIZE;
-
-  for( Int_t mapline = 0; mapline < nentry; mapline++ ){
-
-    apvInfo currAPVinfo;
-    stripInfo currStripInfo;
-
-
-    currAPVinfo.vtpcrate  = fChanMapData[0+mapline*fMPDMAP_ROW_SIZE];
-
-    // thisdata.slot   = fChanMapData[1+mapline*fMPDMAP_ROW_SIZE];//
-    int currSlot = fChanMapData[1+mapline*fMPDMAP_ROW_SIZE];//
-
-
-    //NOTE: fiber <=>mpd
-    currAPVinfo.fiber = fChanMapData[2+mapline*fMPDMAP_ROW_SIZE];
-    currStripInfo.mpd_id = fChanMapData[2+mapline*fMPDMAP_ROW_SIZE];
+    std::cout << "\nuMinAPVinfoKeys: " << std::endl;
+    uMinAPVinfoKeys.print();
+    std::cout << "\nuMinAPVinfoVals: " << std::endl;
+    uMinAPVinfoVals.print();
     
-    // currAPVinfo.gemid = fChanMapData[3+mapline*fMPDMAP_ROW_SIZE];
-    
-    currAPVinfo.adc_ch = fChanMapData[4+mapline*fMPDMAP_ROW_SIZE];
+    std::cout << "\nvMaxAPVinfoKeys: " << std::endl;
+    vMaxAPVinfoKeys.print();
+    std::cout << "\nvMaxAPVinfoVals: " << std::endl;
+    vMaxAPVinfoVals.print();
 
-    currStripInfo.adcID = currAPVinfo.adc_ch;
-    // thisdata.i2c    = fChanMapData[5+mapline*fMPDMAP_ROW_SIZE];
-    currAPVinfo.pos    = fChanMapData[6+mapline*fMPDMAP_ROW_SIZE];
-    // currAPVid.invert = fChanMapData[7+mapline*fMPDMAP_ROW_SIZE];
-     int invert = fChanMapData[7+mapline*fMPDMAP_ROW_SIZE];
-
-    currAPVinfo.axis   = fChanMapData[8+mapline*fMPDMAP_ROW_SIZE];
-
-    currStripInfo.axis = currAPVinfo.axis;
-
-    //TODO:?????????????????? whats this
-    currStripInfo.index  = mapline;  
-
-
-  //Populate relevant quantities mapped by strip index:
-  for( int ich=0; ich<fN_APV25_CHAN; ich++ ){
-    currStripInfo.stripNumber = GetStripNumber( ich, currAPVinfo.pos, invert );
-
-  //   if( stripInfo.axis == 0 ){
-  // fAPVch_by_Ustrip[strip] = ich;
-  // fMPDID_by_Ustrip[strip] = currStripInfo.mpd_id;
-  // fADCch_by_Ustrip[strip] = currStripInfo.adcID;
-  //     } else {
-  // fAPVch_by_Vstrip[strip] = ich;
-  // fMPDID_by_Vstrip[strip] = currStripInfo.mpd_id;
-  // fADCch_by_Vstrip[strip] = currStripInfo.adcID;
-  //     }
-
-    stripInfoMap.insert(currStripInfo);
-
-    if (gemInfoMap.find(currAPVinfo.gemid) == gemInfoMap.end()){
-
-      //Geometry info is required to be present in the database for each module:
-      Int_t err = ReadGeometry( file, date, true );
-      if( err ) {
-        fclose(file);
-        return err;
-      }
-
-        gemInfo currGeminfo;
-        
-        //TODO: need to find for self
-        // currGeminfo.modID=currAPVinfo.gemid;
-
-
-        currGeminfo.layer = fLayer;
-        currGeminfo.apvmap = 2; // I think all are UVa or XW so 2
-        currGeminfo.position = TVector3(fXax,fYax,fZax);
-        // currGeminfo.angle = ;
-        currGeminfo.size = fSize;
-        currGeminfo.uangle=fUAngle;
-        currGeminfo.vangle=fVAngle;
-        currGeminfo.uoffset = fUStripOffset;
-        currGeminfo.voffset = fVStripOffset;
-
-        // nUVstrips=GetUVstrips(currGeminfo.modID)
-        
-        currGeminfo.nstripsu = fNstripsU;
-        currGeminfo.nstripsv = fNstripsV;
-
-        currGeminfo.NuAPVs = fNstripsU/fN_APV25_CHAN;
-        currGeminfo.NvAPVs = fNstripsV/fN_APV25_CHAN;
-
-        
-        gemInfoMap[currAPVinfo.gemid]=currGeminfo; //
-        
-      }
-    }
-    //fiber=mpd_id
-    Int_t effChan = currAPVinfo.fiber << 4 | currAPVinfo.adc_ch; //left-shift mpd id by 4 bits and take the bitwise OR with ADC_id to uniquely identify the APV card.
-
-    // if apvInfoMap[effChan]
-
-    // apvInfoMap.insert(currAPVinfo);
-    // apvInfoMap[effChan] = currAPVinfo; 
-
-    apvInfoKeys currAPVkeys;
-    currAPVkeys.gemid = currAPVinfo.gemid;
-    currAPVkeys.axis = currAPVinfo.axis;
-    currAPVkeys.pos = currAPVinfo.pos;
-
-    if (apvInfoMap.find(currAPVkeys)==apvInfoMap.end()){
-      apvInfoVals currAPVvals;
-      currAPVvals.vtpcrate = currAPVinfo.vtpcrate;
-      currAPVvals.fiber = currAPVinfo.fiber;
-      currAPVvals.adc_ch = currAPVinfo.adc_ch;
-    }
+    std::cout << "\nvMinAPVinfoKeys: " << std::endl;
+    vMinAPVinfoKeys.print();
+    std::cout << "\nvMinAPVinfoVals: " << std::endl;
+    vMinAPVinfoVals.print();
   };
+  //   std::cout << "uMaxAPVinfoKeys: " << std::endl;
+  //   uMaxAPVinfoKeys.print();
+  //   std::cout << "\nuMinAPVinfoKeys: " << std::endl;
+  //   uMinAPVinfoKeys.print();
+  //   std::cout << "\nvMaxAPVinfoKeys: " << std::endl;
+  //   vMaxAPVinfoKeys.print();
+  //   std::cout << "\nvMinAPVinfoKeys: " << std::endl;
 
-   //resize all the "decoded strip" arrays to their maximum possible values for this module:
-  // UInt_t nstripsmax = fNstripsU + fNstripsV;
-  
-  // fStrip.resize( nstripsmax );
-  // fAxis.resize( nstripsmax );
-  
+  //   std::cout << "uMaxAPVinfoVals: " << std::endl;
+  //   uMaxAPVinfoVals.print();
+  //   std::cout << "\nuMinAPVinfoVals: " << std::endl;
+  //   uMinAPVinfoVals.print();
+  //   std::cout << "\nvMaxAPVinfoVals: " << std::endl;
+  //   vMaxAPVinfoVals.print();
+  //   std::cout << "\nvMinAPVinfoVals: " << std::endl;
+  //   vMinAPVinfoVals.print();
+  // };
+
+
+
+int APVFinder::GetLayerOfMod(int modID){
+  if (modID >= 0 && modID < 6) { return modID; }
+    else if (modID >= 6 && modID < 10) { return 6; }
+    else if (modID >= 10 && modID < 14) { return 7; }
+    return -1;
+}
+
+int APVFinder::GetMod_apvmap(int modID){
+  if(modID>=0 && modID<6){ return 2;}
+  else{return 1;}
+};
+
+
+
+void APVFinder::fillGEMInfoMap(){
+  for(int i=0; i<=nMods; i++){
+
+    gemInfoMap[i].layer = GetLayerOfMod(i);
+
+    gemInfoMap[i].apvmap = GetMod_apvmap(i);
+
+    gemInfoMap[i].position = ModPositionmap[i];
+
+    gemInfoMap[i].size = GetModDimensions(i);
+
+    gemInfoMap[i].uvangles = GetUVang(i);
+    
+    gemInfoMap[i].uvoffsets= {stripOffset, stripOffset};
+    
+    gemInfoMap[i].nstripsuv=GetNstrips(i);
+
+    gemInfoMap[i].NuvAPVs = GetNAPVs(i);
+
+  }
+
+}
+
+
+void APVFinder::printGEMinfoMap() {
+  std::cout << "\nPrinting APV Info Map:\n";
+  for (const auto& [key, val] : APVFinder::gemInfoMap) {
+      std::cout << "modID: " << key << ", Layer: " << val.layer
+      << ", Pos: " << val.position[0] <<" "<<val.position[1] << " " << val.position[2] <<std::endl;
+      std::cout << ", Size: " << val.size[0] <<" "<<val.size[1] << " " << val.size[2]<< std::endl;
+
+      std::cout << " Uangle: " << val.uvangles[0] << ", Vangle: " << val.uvangles[1] <<std::endl;
+
+      std::cout<< "NstripsU: " << val.nstripsuv[0]
+      << ", NstripsV: " << val.nstripsuv[1] <<
+      std::endl;
+      
+      std::cout<< "NuAPVs: " << val.NuvAPVs[0]
+      << ", NuAPVs: " << val.NuvAPVs[1] << std::endl;
+      
+      std::cout << "------------------------------------\n" <<std::endl;
   }
 }
 
-
-
-Int_t ReadDB(const TDatime& date ){
-  //Based on SBSGEMModule::ReadDatabase
-  std::cout << "[APVFinder::ReadDB]" << std::endl;
-
-  // hitmap_t thisHit;
-
-  // mpdmap_t thisHit; //from SBSGEMModule
-
-
-  Int_t status;
-
-  FILE* file = OpenFile( date );
-  if( !file ) return kFileError;
-
-  const DBRequest request[] =  {
-    { "chanmap",        &fChanMapData,        kIntV, 0, 0, 0}, // mandatory: decode map info
-    { "apvmap",         &fAPVmapping,    kUInt, 0, 1, 1}, //optional, allow search up the tree if all modules in a setup have the same APV mapping;
-
-    { "layer",          &fLayer,         kUShort, 0, 0, 0}, // mandatory: logical tracking layer must be specified for every module:
-    { "nstripsu",       &fNstripsU,     kUInt, 0, 0, 1}, //mandatory: number of strips in module along U axis
-    { "nstripsv",       &fNstripsV,     kUInt, 0, 0, 1}, //mandatory: number of strips in module along V axis
-    { "uangle",         &fUAngle,       kDouble, 0, 0, 1}, //mandatory: Angle of "U" strips wrt X axis
-    { "vangle",         &fVAngle,       kDouble, 0, 0, 1}, //mandatory: Angle of "V" strips wrt X axis
-    { "uoffset",        &fUStripOffset, kDouble, 0, 1, 1}, //optional: position of first U strip
-    { "voffset",        &fVStripOffset, kDouble, 0, 1, 1}, //optional: position of first V strip
-    { "upitch",         &fUStripPitch,  kDouble, 0, 0, 1}, //mandatory: Pitch of U strips
-    { "vpitch",         &fVStripPitch,  kDouble, 0, 0, 1}, //mandatory: Pitch of V strips
-  };
-
-  status = LoadDB( file, date, request, fPrefix, 1 ); //The "1" after fPrefix means search up the tree
-
-  // SetProjOps(UVangs);
-
-  fAPVch_by_Ustrip.clear();
-  fAPVch_by_Vstrip.clear();
-  fMPDID_by_Ustrip.clear();
-  fMPDID_by_Vstrip.clear();
-  fADCch_by_Ustrip.clear();
-  fADCch_by_Vstrip.clear();
-  
-
-  Int_t nentry = fChanMapData.size()/fMPDMAP_ROW_SIZE;
-
-  for( Int_t mapline = 0; mapline < nentry; mapline++ ){
-
-    APVFindingSpace::apvInfo currAPVinfo;
-    APVFindingSpace::stripInfo currStripInfo;
-
-
-    currAPVinfo.vtpcrate  = fChanMapData[0+mapline*fMPDMAP_ROW_SIZE];
-
-    // thisdata.slot   = fChanMapData[1+mapline*fMPDMAP_ROW_SIZE];//
-    int currSlot = fChanMapData[1+mapline*fMPDMAP_ROW_SIZE];//
-
-
-    //NOTE: fiber <=>mpd
-    currAPVinfo.fiber = fChanMapData[2+mapline*fMPDMAP_ROW_SIZE];
-    currStripInfo.mpd_id = fChanMapData[2+mapline*fMPDMAP_ROW_SIZE];
-    
-    currAPVinfo.gemid = fChanMapData[3+mapline*fMPDMAP_ROW_SIZE];
-    
-    currAPVinfo.adc_ch = fChanMapData[4+mapline*fMPDMAP_ROW_SIZE];
-
-    currStripInfo.adcID = currAPVinfo.adc_ch;
-    // thisdata.i2c    = fChanMapData[5+mapline*fMPDMAP_ROW_SIZE];
-    currAPVinfo.pos    = fChanMapData[6+mapline*fMPDMAP_ROW_SIZE];
-    // currAPVid.invert = fChanMapData[7+mapline*fMPDMAP_ROW_SIZE];
-     int invert = fChanMapData[7+mapline*fMPDMAP_ROW_SIZE];
-
-    currAPVinfo.axis   = fChanMapData[8+mapline*fMPDMAP_ROW_SIZE];
-
-    currStripInfo.axis = currAPVinfo.axis;
-
-    //TODO:?????????????????? whats this
-    currStripInfo.index  = mapline;  
-
-
-  //Populate relevant quantities mapped by strip index:
-  for( int ich=0; ich<fN_APV25_CHAN; ich++ ){
-    currStripInfo.stripNumber = GetStripNumber( ich, currAPVinfo.pos, invert );
-    //   if( stripInfo.axis == 0 ){
-    // fAPVch_by_Ustrip[strip] = ich;
-    // fMPDID_by_Ustrip[strip] = currStripInfo.mpd_id;
-    // fADCch_by_Ustrip[strip] = currStripInfo.adcID;
-    //     } else {
-    // fAPVch_by_Vstrip[strip] = ich;
-    // fMPDID_by_Vstrip[strip] = currStripInfo.mpd_id;
-    // fADCch_by_Vstrip[strip] = currStripInfo.adcID;
-    //     }
-
-    stripInfoMap.insert(currStripInfo);
-
-    if (gemInfoMap.find(currAPVinfo.gemid) == gemInfoMap.end()){
-
-      //Geometry info is required to be present in the database for each module:
-      Int_t err = ReadGeometry( file, date, true );
-      if( err ) {
-        fclose(file);
-        return err;
-      }
-
-        gemInfo currGeminfo;
-        
-        currGeminfo.modID=currAPVinfo.gemid;
-        currGeminfo.layer = fLayer;
-        currGeminfo.apvmap = 2; // I think all are UVa or XW so 2
-        currGeminfo.position = TVector3(fXax,fYax,fZax);
-        currGeminfo.angle = ;
-        currGeminfo.size = fSize;
-        currGeminfo.uangle=fUAngle;
-        currGeminfo.vangle=fVAngle;
-        currGeminfo.uoffset = fUStripOffset;
-        currGeminfo.voffset = fVStripOffset;
-
-        // nUVstrips=GetUVstrips(currGeminfo.modID)
-        
-        currGeminfo.nstripsu = fNstripsU;
-        currGeminfo.nstripsv = fNstripsV;
-
-        currGeminfo.NuAPVs = fNstripsU/fN_APV25_CHAN;
-        currGeminfo.NvAPVs = fNstripsV/fN_APV25_CHAN;
-
-        
-        gemInfoMap[currAPVinfo.gemid]=currGeminfo; //
-        
-      }
-    }
-    //fiber=mpd_id
-    Int_t effChan = currAPVinfo.fiber << 4 | currAPVinfo.adc_ch; //left-shift mpd id by 4 bits and take the bitwise OR with ADC_id to uniquely identify the APV card.
-
-    // if apvInfoMap[effChan]
-
-    // apvInfoMap.insert(currAPVinfo);
-    // apvInfoMap[effChan] = currAPVinfo; 
-
-    apvInfoKeys currAPVkeys;
-    currAPVkeys.gemid = currAPVinfo.gemid;
-    currAPVkeys.axis = currAPVinfo.axis;
-    currAPVkeys.pos = currAPVinfo.pos;
-
-    if (apvInfoMap.find(currAPVkeys)==apvInfoMap.end()){
-      apvInfoVals currAPVvals;
-      currAPVvals.vtpcrate = currAPVinfo.vtpcrate;
-      currAPVvals.fiber = currAPVinfo.fiber;
-      currAPVvals.adc_ch = currAPVinfo.adc_ch;
-    }
-  };
-
-   //resize all the "decoded strip" arrays to their maximum possible values for this module:
-  // UInt_t nstripsmax = fNstripsU + fNstripsV;
-  
-  // fStrip.resize( nstripsmax );
-  // fAxis.resize( nstripsmax );
-  
+// Function to write `apvInfoMap` to a file
+void APVFinder::OutputGEMinfoMap() {
+  std::ofstream mapFile("gemFT_Map_TEST.txt");
+  if (!mapFile.is_open()) {
+      std::cerr << "Error: Could not create file gemFT_Map_TEST.txt\n";
+      return;
   }
 
+  // Set column widths for formatting
+  int colWidth = 12;  // Adjust to align properly
 
+  mapFile << std::left 
+    << std::setw(colWidth) << "modID"
+    << std::setw(colWidth) << "layer"
+    << std::setw(22) << "Pos"  // Extra width for coordinates
+    << std::setw(26) << "Size"  // Extra width for size
+    << std::setw(colWidth) << "Uangle"
+    << std::setw(colWidth) << "Vangle"
+    << std::setw(colWidth) << "NstripsU"
+    << std::setw(colWidth) << "NstripsV"
+    << std::setw(colWidth) << "NuAPVs"
+    << std::setw(colWidth) << "NvAPVs"
+    << "\n";
 
+  mapFile << std::string(140, '-') << "\n"; 
 
+  for (const auto& [key, val] : APVFinder::gemInfoMap) {
+    std::ostringstream posStream, sizeStream;
+    posStream << "(" << val.position[0] << ", " << val.position[1] << ", " << val.position[2] << ")";
+    sizeStream << "(" << val.size[0] << ", " << val.size[1] << ", " << val.size[2] << ")";
 
-Int_t APVFinder::ReadGeometry( FILE *file, const TDatime &date, Bool_t required ){ //We start with a copy of THaDetectorBase::ReadGeometry and modify accordingly:
-  // Read this detector's basic geometry information from the database.
-  // Derived classes may override to read more advanced data.
+    mapFile << std::left 
+      << std::setw(colWidth) << key
+      << std::setw(colWidth) << val.layer
+      << std::setw(22) << posStream.str()   
+      << std::setw(26) << sizeStream.str() 
+      << std::setw(colWidth) << val.uvangles[0]
+      << std::setw(colWidth) << val.uvangles[1]
+      << std::setw(colWidth) << val.nstripsuv[0]
+      << std::setw(colWidth) << val.nstripsuv[1]
+      << std::setw(colWidth) << val.NuvAPVs[0]
+      << std::setw(colWidth) << val.NuvAPVs[1]
+      << "\n";
+  }
 
-  const char* const here = "ReadGeometry";
-
-  vector<double> position, size, angles;
-  Bool_t optional = !required;
-  DBRequest request[] = {
-    { "position", &position, kDoubleV, 0, optional, 0,
-      "\"position\" (detector position [m])" },
-    { "size",     &size,     kDoubleV, 0, optional, 1,
-      "\"size\" (detector size [m])" },
-    { "angle",    &angles,   kDoubleV, 0, true, 0,
-      "\"angle\" (detector angles(s) [deg]" },
-    { nullptr }
-  };
-  Int_t err = LoadDB( file, date, request );
-  if( err )
-    return kInitError;
-
-    if( !position.empty() ) {
-      if( position.size() != 3 ) {
-        Error( Here(here), "Incorrect number of values = %u for "
-         "detector position. Must be exactly 3. Fix database.",
-         static_cast<unsigned int>(position.size()) );
-        return 1;
-      }
-      fOrigin.SetXYZ( position[0], position[1], position[2] );
-    }
-    else
-      fOrigin.SetXYZ(0,0,0);
-  
-    if( !size.empty() ) {
-      if( size.size() != 3 ) {
-        Error( Here(here), "Incorrect number of values = %u for "
-         "detector size. Must be exactly 3. Fix database.",
-         static_cast<unsigned int>(size.size()) );
-        return 2;
-      }
-      if( size[0] == 0 || size[1] == 0 || size[2] == 0 ) {
-        Error( Here(here), "Illegal zero detector dimension. Fix database." );
-        return 3;
-      }
-      if( size[0] < 0 || size[1] < 0 || size[2] < 0 ) {
-        Warning( Here(here), "Illegal negative value for detector dimension. "
-           "Taking absolute. Check database." );
-      }
-      fSize[0] = 0.5 * TMath::Abs(size[0]);
-      fSize[1] = 0.5 * TMath::Abs(size[1]);
-      fSize[2] = TMath::Abs(size[2]);
-    }
-    else
-      fSize[0] = fSize[1] = fSize[2] = kBig;
-
-      if( !angles.empty() ) {
-        if( angles.size() != 1 && angles.size() != 3 ) {
-          Error( Here(here), "Incorrect number of values = %u for "
-           "detector angle(s). Must be either 1 or 3. Fix database.",
-           static_cast<unsigned int>(angles.size()) );
-          return 4;
-        }
-        // If one angle is given, it indicates a rotation about y, as before.
-        // If three angles are given, they are interpreted as rotations about the X, Y, and Z axes, respectively:
-        // 
-        if( angles.size() == 1 ) {
-          DefineAxes( angles[0] * TMath::DegToRad() );
-        }
-        else {
-          TRotation RotTemp;
-    
-          // So let's review how to define the detector axes correctly.
-    
-          // THaDetectorBase::DetToTrackCoord(TVector3 p) returns returns p.X * fXax() + p.Y * fYax() + p.Z * fZax() + fOrigin
-          // In the standalone code, we do Rot * (p) + fOrigin (essentially):
-          // So in matrix form, when we do TRotation::RotateX(alpha), we get:
-    
-          // RotTemp * Point =  |  1    0            0         |    |  p.X()  |
-          //                    |  0   cos(alpha) -sin(alpha)  | *  |  p.Y()  |
-          //                    |  0   sin(alpha)  cos(alpha)  |    |  p.Z()  |
-          // 
-          // This definition ***appears**** to be consistent with the "sense" of the rotation as applied by the standalone code.
-          // The detector axes are defined as the columns of the rotation matrix. We will have to test that it is working correctly, however:
-          
-          RotTemp.RotateX( angles[0] * TMath::DegToRad() );
-          RotTemp.RotateY( angles[1] * TMath::DegToRad() );
-          RotTemp.RotateZ( angles[2] * TMath::DegToRad() );
-          
-          fXax.SetXYZ( RotTemp.XX(), RotTemp.YX(), RotTemp.ZX() );
-          fYax.SetXYZ( RotTemp.XY(), RotTemp.YY(), RotTemp.ZY() );
-          fZax.SetXYZ( RotTemp.XZ(), RotTemp.YZ(), RotTemp.ZZ() );
-        }
-      } else
-        DefineAxes(0);
-
-
-      // gemInfo currGemInfo
-
-    fPxU = cos(UAngle);
-
-    fPyU = sin(UAngle);
-    fPxV = cos(VAngle);
-    fPyV = sin(VAngle);
-    
-      return 0;
-  
+  std::cout << "Parsed data written to gemFT_Map_TEST.txt\n";
 }
 
-// from THaDetectorBase::
-void DefineAxes( Double_t rotation_angle )
-{
-  // Define detector orientation, assuming a tilt by rotation_angle (in rad)
-  // around the y-axis
-
-  fXax.SetXYZ( 1.0, 0.0, 0.0 );
-  fXax.RotateY( rotation_angle );
-  fYax.SetXYZ( 0.0, 1.0, 0.0 );
-  fZax = fXax.Cross(fYax);
-
+//changes invert to either 1 or -1 to be used as a factor
+int APVFinder::SetInvert(int invert){
+  if (invert == 0){return 1;}
+  if (invert == 1){return -1;}
 }
+
+
 
 //Takes in txt files
-void MakeRefMap(const char* refFile){
-  std::ifstream aRefFile(refFile);  
+void APVFinder::MakeRefMap(const char* refFile) {
+  std::ifstream aRefFile(refFile);
+  if (!aRefFile.is_open()) {
+      std::cerr << "Error: Could not open file " << refFile << std::endl;
+      return;
+  }
 
   std::string currLine;
-  
-  int currentM = -1; // Track modIDs number
-  
-  while(std::getline(aRefFile, currLine)) {
+  int currentM = -1;  // Track current module ID
 
-    std::stringstream lineStream(currLine);
+  while (std::getline(aRefFile, currLine)) {
+      std::stringstream lineStream(currLine);
+      std::string lineStarter;
+      lineStream >> lineStarter;
 
-    
-    // apvInfoKeys currAPVkeys;
-    // apvInfoVals currAPVvals;
+      if (lineStarter == "##") {
+          if (std::getline(aRefFile, currLine)) {
+              size_t mPos = currLine.find(".m");
+              size_t chanPos = currLine.find(".chanmap");
 
-    std::string lineStarter;
-    lineStream >> lineStarter;
-
-    if (lineStarter == "##"){
-
-      if (std::getline(aRefFile, currLine)) {
-        std::size_t mPos = currLine.find(".m");
-        std::size_t chanPos = currLine.find(".chanmap");
-
-        if (mPos != std::string::npos && chanPos != std::string::npos) {
-          std::string mNum;
-          size_t start = mPos + 2;
-          size_t end = currLine.find('.', start); // Find the next dot after "m"
-          if (end != std::string::npos) {
-              mNum = currLine.substr(start, end - start);
-              currentM = std::stoi(mNum);
+              if (mPos != std::string::npos && chanPos != std::string::npos) {
+                  size_t start = mPos + 2;
+                  size_t end = currLine.find('.', start);
+                  if (end != std::string::npos) {
+                      currentM = std::stoi(currLine.substr(start, end - start));
+                  }
+              }
           }
-        }
+      } 
+      else if (!currLine.empty() && currentM != -1) {
+          apvInfoKeys currAPVkeys;
+          apvInfoVals currAPVvals;
+          currAPVkeys.gemid = currentM;
+
+          std::string dumpStr;
+          std::stringstream dataStream(currLine);
+          dataStream >> currAPVvals.vtpcrate >> dumpStr >> currAPVvals.fiber >> dumpStr
+                     >> currAPVvals.adc_ch >> dumpStr >> currAPVkeys.pos 
+                     >> currAPVvals.invert
+                     >> currAPVkeys.axis;
+
+          currAPVvals.invert = SetInvert(currAPVvals.invert);
+
+          apvInfoMap[currAPVkeys] = currAPVvals;
+      } else {
+          currentM = -1;  // Reset if empty line encountered
       }
-
-    }
-
-   else if (!currLine.empty() && currentM != -1) {
-    apvInfoKeys currAPVkeys;
-    apvInfoVals currAPVvals;
-
-    currAPVkeys.gemid=currentM;
-
-    std::string dumpStr;
-
-    std::stringstream dataStream(currLine);
-    dataStream >> currAPVvals.vtpcrate >> dumpStr >> currAPVvals.fiber >> dumpStr
-               >> currAPVvals.adc_ch >> dumpStr >> currAPVkeys.pos >> dumpStr >> currAPVkeys.axis;
-    
-    apvInfoMap[currAPVkeys]=curAPVvals;
-    }
-    else {
-        // Reset when an empty line is encountered
-        currentM = -1;
-    }
   }
 
-  void writeOutRefMap(){
-    // Output parsed data to a file
-    std::ofstream mapFile("parsed_map.txt");
-    for (const auto& [key, val] : apvInfoMap) {
-        mapFile << "sbs.gemFT.m" << key.gemid << ".chanmap =\n";
-        mapFile << "     " << val.vtpcrate << "  " << val.slot << "  " << val.fiber
-                << "  " << val.gemid << "  " << val.adc_ch << "  " << val.i2c
-                << "  " << key.pos << "  " << val.invert << "  " << key.axis << "\n\n";
-    }
+  std::cout << "Finished filling apvInfoMap with " << apvInfoMap.size() << " entries.\n";
+}
+
+  // Function to print `apvInfoMap`
+void APVFinder::printAPVinfoMap() {
+  std::cout << "Printing APV Info Map:\n";
+  for (const auto& [key, val] : apvInfoMap) {
+      std::cout << "GEMId: " << key.gemid << ", Axis: " << key.axis
+                << ", Pos: " << key.pos << std::endl;
+      std::cout << "VTPcrate: " << val.vtpcrate << ", Fiber: " << val.fiber
+                << ", invert: " << val.invert
+                << ", ADC_ch: " << val.adc_ch << std::endl;
+      std::cout << "------------------------------------\n";
+  }
+};
+
+// Function to write `apvInfoMap` to a file
+void APVFinder::OutputAPVinfoMap() {
+  std::ofstream mapFile("APV_Map_TEST.txt");
+  if (!mapFile.is_open()) {
+      std::cerr << "Error: Could not create file APV_Map_TEST.txt\n";
+      return;
   }
 
-    // Output results to a corresponding map file
-    std::ofstream mapFile("parsed_map.txt");
-    for (const auto& [mIndex, values] : apvData) {
-    mapFile << "sbs.gemFT.m" << mIndex << ".chanmap =\n";
-    for (const auto& val : values) {
-        mapFile << "     " << val.vtpcrate << "  " << val.slot << "  " << val.fiber
-                << "  " << val.gemid << "  " << val.adc_ch << "  " << val.i2c
-                << "  " << val.pos << "  " << val.invert << "  " << val.axis << "\n";
-    }
-    mapFile << "\n";
-    }
+  mapFile << "#apvInfoMap actually maps key and value structs to eachother\n" ;
+  mapFile << "## the apvInfoKeys consists of: module id, axis(U/V depending on map), and  pos(along axis)\n";
+  mapFile << "## the apvInfoVals consists of: VTPcrate, Fiber(MPD) ID, and  the ADC channel\n\n";
 
-    std::cout << "Parsed data written to parsed_map.txt\n";
+  // Set column widths for formatting
+  int colWidth = 10; // Adjust as needed for alignment
 
+  mapFile << std::left << std::setw(colWidth) << "GEMId"
+          << std::setw(colWidth) << "Axis"
+          << std::setw(colWidth) << "Pos"
+          << std::setw(colWidth) << "VTPcrate"
+          << std::setw(colWidth) << "Fiber"
+          << std::setw(colWidth) << "ADC_ch"
+          << "\n";
+  
+  mapFile << std::string(6 * colWidth, '-') << "\n"; // Create a line separator
+
+  for (const auto& [key, val] : apvInfoMap) {
+      mapFile << std::left << std::setw(colWidth) << key.gemid
+              << std::setw(colWidth) << key.axis
+              << std::setw(colWidth) << key.pos
+              << std::setw(colWidth) << val.vtpcrate
+              << std::setw(colWidth) << val.fiber
+              << std::setw(colWidth) << val.adc_ch
+              << "\n";
   }
 
+  std::cout << "Parsed data written to APV_Map_TEST.txt\n";
+}
+
+
+void APVFinder::printRoiAPVMap() {
+  std::cout << "Printing ROI APV Map:\n";
+  for (const auto& [key, val] : roiAPVmap) {
+
+      std::cout << "LineNumber: " << key << std::endl;
+
+      
+      val.print();
+  }
+};
+
+// Function to write `apvInfoMap` to a file
+void APVFinder::OutputRoiAPVMap() {
+  std::ofstream mapFile("ROI_APV_Map_TEST.txt");
+  if (!mapFile.is_open()) {
+      std::cerr << "Error: Could not create file ROI_APV_Map_TEST.txt\n";
+      return;
+  }
+
+  mapFile << "# roiAPVmap contains mapping of ROIs to APV information\n";
+  mapFile << "## Each line represents an ROI with its corresponding APV IDs and VTP crate, fiber, and ADC channel info\n\n";
+
+  // Set column widths for formatting
+  int colWidth = 12;
+
+  mapFile << std::left << std::setw(colWidth) << "LineNum"
+          // << std::setw(colWidth) << "GEMLayer"
+          << std::setw(colWidth) << "MinModID"
+          << std::setw(colWidth) << "MaxModID"
+          << std::setw(colWidth) << "UminAPV"
+          << std::setw(colWidth) << "VminAPV"
+          << std::setw(colWidth) << "UmaxAPV"
+          << std::setw(colWidth) << "VmaxAPV"
+          << std::setw(colWidth) << "VTPcrate"
+          << std::setw(colWidth) << "Fiber"
+          << std::setw(colWidth) << "ADC_ch"
+          << std::setw(colWidth) << "invert"
+          << "\n";
+
+  mapFile << std::string(11 * colWidth, '-') << "\n"; // Create a line separator
+
+  for (const auto& [lineNum, roiInfo] : roiAPVmap) {
+      mapFile << std::left
+              << std::setw(colWidth) << lineNum
+              << std::setw(colWidth) << roiInfo.uMinAPVinfoVals.vtpcrate
+              << std::setw(colWidth) << roiInfo.uMinAPVinfoVals.fiber
+              << std::setw(colWidth) << roiInfo.uMinAPVinfoVals.adc_ch
+              << std::setw(colWidth) << roiInfo.uMinAPVinfoVals.invert
+              << std::setw(colWidth) << roiInfo.uMaxAPVinfoVals.vtpcrate
+              << std::setw(colWidth) << roiInfo.uMaxAPVinfoVals.fiber
+              << std::setw(colWidth) << roiInfo.uMaxAPVinfoVals.adc_ch
+              << std::setw(colWidth) << roiInfo.uMaxAPVinfoVals.invert
+              << std::setw(colWidth) << roiInfo.vMinAPVinfoVals.vtpcrate
+              << std::setw(colWidth) << roiInfo.vMinAPVinfoVals.fiber
+              << std::setw(colWidth) << roiInfo.vMinAPVinfoVals.adc_ch
+              << std::setw(colWidth) << roiInfo.vMinAPVinfoVals.invert
+              << std::setw(colWidth) << roiInfo.vMaxAPVinfoVals.vtpcrate
+              << std::setw(colWidth) << roiInfo.vMaxAPVinfoVals.fiber
+              << std::setw(colWidth) << roiInfo.vMaxAPVinfoVals.adc_ch
+              << std::setw(colWidth) << roiInfo.vMaxAPVinfoVals.invert
+              << "\n";
+  }
+
+  std::cout << "Parsed data written to ROI_APV_Map_TEST.txt\n";
+}
 
 // UInt_t numLines = 0;
 
 // void LoadLine(UInt_t currLine){
 // void LoadLine(std::string LineStr){
 // std::vector<HitInfo> LoadLine(std::string &LineStr){
-XY_ROI LoadLine(std::string &LineStr){
+  APVFinder::XY_ROI APVFinder::LoadLine(std::string &LineStr){
 
   std::stringstream lineStream(LineStr);
 
@@ -773,7 +534,7 @@ XY_ROI LoadLine(std::string &LineStr){
   lineStream >> hit.ECalBin >> hit.GEMLayer >> hit.xMin >> hit.xMax >> hit.yMin >> hit.yMax;
 
   if (std::isnan(hit.xMin) || std::isnan(hit.xMax) || std::isnan(hit.yMin) || std::isnan(hit.yMax)) {
-    std::cerr << "Skipping line with NaN values: " << LineStr << std::endl;
+    // std::cerr << "Skipping line with NaN values: " << LineStr << std::endl;
     hit.lineNumber = -1;  // Mark as invalid (or handle it as needed)
   };
 
@@ -781,23 +542,23 @@ XY_ROI LoadLine(std::string &LineStr){
 }
 
 
-  apvInfoVals GetAPV(int gemid, int axis, int pos){ 
+  APVFinder::apvInfoVals APVFinder::GetAPV(int gemid, int axis, int pos){ 
     apvInfoKeys thisKey;
     thisKey.gemid = gemid;
     thisKey.axis = axis;
     thisKey.pos = pos;
-    return APVFinder::apvInfoMap[thisKey]
+    return APVFinder::apvInfoMap[thisKey];
   }
 
 
   
-  TVector3 GetModDimensions(int apvmap){
+  std::array<double, 3> APVFinder::GetModDimensions(int apvmap){
     if (apvmap==2){
       //in meters
-      return TVector3(1.5, .4, .001);
+      return std::array<double, 3> {1.5, .4, .001};
     }
     if (apvmap==1){
-      return TVector3(.512, .6144, .001);
+      return std::array<double, 3> {.512, .6144, .001};
     }
   }
 
@@ -808,98 +569,99 @@ XY_ROI LoadLine(std::string &LineStr){
   //Positions in internal GEM coordinate system?
   
 
-  TVector2 GetUVang(int modID){
-    if(modID ==0){ return TVector2(180., 135.);}
-    else if(modID ==1){ return TVector2(180., -135.);}
-    else if (modID >=2 && modID < 5){return TVector2(150., -150.);}
-    else if (modID >=6 && modID < 14){return TVector2(0., -90.);}
+  std::array<double, 2> APVFinder::GetUVang(int modID){
+    if(modID ==0){ return std::array<double, 2>{180., 135.};}
+    else if(modID ==1){ return std::array<double, 2>{180., -135.};}
+    else if (modID >=2 && modID < 5){return std::array<double, 2>{150., -150.};}
+    else if (modID >=6 && modID < 14){return std::array<double, 2>{0., -90.};}
   }
   
 
-  TVector2 LayerUVang(int layer){
-    if(layer ==0){ return TVector2(180., 135.);}
-    else if(layer ==1){ return TVector2(180., -135.);}
-    else if (layer >=2 && layer <6){return TVector2(150., -150.);}
-    else if (layer>=6){return TVector2(0., -90.);}
+  std::array<double, 2> APVFinder::LayerUVang(int layer){
+    if(layer ==0){ return std::array<double, 2>{180., 135.};}
+    else if(layer ==1){ return std::array<double, 2>{180., -135.};}
+    else if (layer >=2 && layer <6){return std::array<double, 2>{150., -150.};}
+    else if (layer>=6){return std::array<double, 2>{0., -90.};}
   }
 
 
 
   //Get Projection operators given angles u and v
-  void SetProjOps(TVector2 UVangles){
-    auto fUAngle=UVangles.X(); auto fVAngle=UVangles.X();
+  void APVFinder::SetProjOps(std::array<double, 2> UVangles){
+    auto fUAngle=UVangles[0]; auto fVAngle=UVangles[1];
 
-    APVFinder::fPxU = cos( fUAngle * TMath::DegToRad());
-    APVFinder::fPyU = sin( fUAngle * TMath::DegToRad());
-    APVFinder::fPxV = cos( fVAngle * TMath::DegToRad());
-    APVFinder::fPyV = sin( fVAngle * TMath::DegToRad());
+    APVFinder::fPxU = cos( fUAngle * M_PI/180.);
+    APVFinder::fPyU = sin( fUAngle * M_PI/180.);
+    APVFinder::fPxV = cos( fVAngle * M_PI/180.);
+    APVFinder::fPyV = sin( fVAngle * M_PI/180.);
   }
 
   //.0004m = 400 micrometers
   // double GetPitch(){return .0004;}
 
-  double GetUVoffset(int modID, char *axis){
+  // double APVFinder::GetUVoffset(int modID, char *axis){
+  double APVFinder::GetUVoffset(int modID, int axis){
     if(modID ==0 || modID == 1){
-      if (axis == "u"){ return .0176;}
-      else if (axis == "v"){return 0.;}
+      if (axis == 0){ return .0176;}
+      else if (axis == 1){return 0.;}
     }
     else if (modID >=2 && modID < 5){return .0108;}
     else if (modID >=6 && modID < 14){return 0.;}
   }
   
-  TVector2 GetOffset(int modID){
-    if(modID ==0 || modID == 1){ return TVector2(.0176, 0.);}
-    else if (modID >=2 && modID < 5){return TVector2(.0108, .0108);}
-    else if (modID >=6 && modID < 14){return TVector2(0., 0.);}
+  std::array<double, 2> APVFinder::GetOffset(int modID){
+    if(modID ==0 || modID == 1){ return std::array<double, 2>{.0176, 0.};}
+    else if (modID >=2 && modID < 5){return std::array<double, 2>{.0108, .0108};}
+    else if (modID >=6 && modID < 14){return std::array<double, 2>{0., 0.};}
   }
  
-  int GetNstrips(int modID, char *axis){
+  // int APVFinder::GetNstrips(int modID, const std::string& axis){
+  int APVFinder::GetNstrips(int modID, int axis){
     if(modID ==0 || modID == 1){
-      if (axis == "u"){ return 3968;}
-      else if (axis == "v"){return 3456;}
+      if (axis == 0){ return 3968;}
+      else if (axis == 1){return 3456;}
 
     else if (modID >=2 && modID < 5){return 3840;}
     
     else if (modID >=6 && modID < 14){
-      if (axis == "u"){ return 1280;}
-      else if (axis == "v"){return 1536;}
+      if (axis == 0){ return 1280;}
+      else if (axis == 1){return 1536;}
     }
     }
   }
 
-  Int_t SBSGEMModule::GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert ){
-  Int_t GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert ){
-    Int_t RstripNb = APVMAP[fAPVmapping][rawstrip];
+  // Int_t SBSGEMModule::GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert ){
+  int APVFinder::GetStripNumber( int rawstrip, int pos, int invert ){
+    int RstripNb = APVMAP[fAPVmapping][rawstrip];
     RstripNb = RstripNb + (127-2*RstripNb)*invert;
-    Int_t RstripPos = RstripNb + 128*pos;
+    int RstripPos = RstripNb + 128*pos;
   
-    if( fIsMC ){
-      return rawstrip + 128*pos;
-    }
+    // ?????????????????
+    // if( fIsMC ){
+    //   return rawstrip + 128*pos;
+    // }
     
     return RstripPos;
   }
   
-  TVector2 GetNstrips(int modID){
+  std::array<int, 2> APVFinder::GetNstrips(int modID){
     if(modID ==0 || modID == 1){ 
-      return TVector2(3968, 3456);}
+      return std::array<int, 2>{3968, 3456};}
 
     else if (modID >=2 && modID < 6){
-      return TVector2(3840, 3840);}
+      return std::array<int, 2>{3840, 3840};}
     
     else if (modID >=6 && modID < 14){
-      return TVector2(1280, 1536);}
+      return std::array<int, 2>{1280, 1536};}
   }
 
-    //Get min and max of either u or v and returv the corresponding strip IDs
-  TVector2 GetStripRange(){}
 
-    //  int stripToAPVid(int modID, )
-  
-  TVector2 GetNAPVs(int modID){
+  std::array<int, 2> APVFinder::GetNAPVs(int modID){
       
       //128 strips per APV
-      return GetNstrips(modID)/128;
+      // return GetNstrips(modID)/128;
+      auto currStripNums = GetNstrips(modID);
+      return std::array<int, 2>{currStripNums[0]/128, currStripNums[1]/128};
       
       // NOTE: if(modID ==0 || modID == 1){ 
       //   return TVector2(31, 27);}
@@ -911,7 +673,7 @@ XY_ROI LoadLine(std::string &LineStr){
       //   return TVector2(10, 12);}
     }
     
-    int UorVtoAPVid(int modID, TVector2 localUVPos,
+    int APVFinder::UorVtoAPVid(int modID, std::array<int, 2> localUVPos,
       int axis //U/X=0, V/Y=1
     ){
       double localPos;
@@ -921,11 +683,11 @@ XY_ROI LoadLine(std::string &LineStr){
       int numAPVs;
 
       if (axis == 0){
-        numAPVs = int(GetNAPVs(modID).X());
-        localPos=localUVPos.X();}
+        numAPVs = int(GetNAPVs(modID)[0]);
+        localPos=localUVPos[0];}
       else if (axis == 1){
-        numAPVs = int(GetNAPVs(modID).Y());
-        localPos=localUVPos.Y();} 
+        numAPVs = int(GetNAPVs(modID)[1]);
+        localPos=localUVPos[1];} 
     
       //numAPVs along this axis
 
@@ -934,7 +696,7 @@ XY_ROI LoadLine(std::string &LineStr){
       int layerAPVid;
 
       //NOTE: PER Layer APV id;
-      if(modID >= 0 || modID < 6){
+      if(modID >= 0 && modID < 6){
         for( int i = 0; i <= numAPVs; i++){
           // APVedges= TVector2(i, (i+1))*APVsize;
           if (localPos>=i*APVsize && 
@@ -942,14 +704,14 @@ XY_ROI LoadLine(std::string &LineStr){
             { layerAPVid = i; break;}
          }
       }
-      else if(modID >= 6 || modID < 10){
+      else if(modID >= 6 && modID < 10){
         modID -= 6;
         for( int i = 0; i <= numAPVs; i++)
           {if (localPos>=i*APVsize && 
             localPos<(i+1)*APVsize)
             { layerAPVid = i; break;}}
       }
-      else if (modID >= 10 || modID < 14){
+      else if (modID >= 10 && modID < 14){
         modID-=10;
         for( int i = 0; i <= numAPVs; i++)
           {if (localPos>=i*APVsize && 
@@ -964,11 +726,11 @@ XY_ROI LoadLine(std::string &LineStr){
       while(currMod < modID) {
         int currNAPVs;
         if (axis == 0){
-          currNAPVs = int(GetNAPVs(currMod).X());
-          localPos=localUVPos.X();}
+          currNAPVs = int(GetNAPVs(currMod)[0]);
+          localPos=localUVPos[0];}
         else if (axis == 1){
-          currNAPVs = int(GetNAPVs(currMod).Y());
-          localPos=localUVPos.Y();} 
+          currNAPVs = int(GetNAPVs(currMod)[1]);
+          localPos=localUVPos[1];} 
 
         globalAPVid += currNAPVs;
         currMod++;
@@ -979,60 +741,81 @@ XY_ROI LoadLine(std::string &LineStr){
 
 
   // TODO: for now just copied from SBSGEMModule 
-  TVector2 XYtoUV( TVector2 XY ){
+  std::array<double, 2> APVFinder::XYtoUV( std::array<double, 2> XY ){
 
-    double Xtemp = XY.X();
-    double Ytemp = XY.Y();
+    double Xtemp = XY[0];
+    double Ytemp = XY[1];
   
     double Utemp = Xtemp*fPxU + Ytemp*fPyU;
     double Vtemp = Xtemp*fPxV + Ytemp*fPyV;
   
-    return TVector2(Utemp,Vtemp);
+    return std::array<double, 2> {Utemp,Vtemp};
   }
 
+  //transforms with respect to the center of the layer 
+  //count down from top dividing up mods along each layer 
 
-  // int GetModId(int layerID, TVector2 hitPos, TVector3 modDims){
-  int GetModId(int layerID, double hitX){
 
-    double xSize=GetModDimensions(layerID);
+  // int APVFinder::GetModId(int layerID, std::array<int, 2> hitPos, std::array<int, 3> modDims){
+  int APVFinder::GetModId(int layerID, double hitX){
 
+    std::cout << "\n#Calling GetModId(layer, xGlobal): " << std::endl;
+
+    double xSize=APVFinder::GetModDimensions(layerID)[0];
+
+    std::cout << "xSize: " << xSize << std::endl;
+
+    std::array<double, 3> modPos;
     int modID = -1;
-    if(layerID>5){
-      for (int i=6; i<14; i++){
-        TVector3 modPos = ModPositionMap[i];
-        // modSize=modDims[0];
-        
-        //TODO: cconsider cases ON the bounds
-        if (hitX> modPos[0]-xSize
-          &&
-          hitX < modPos[0]+xSize)
-          {modID = i; break;}
-          
-        };
-      if (modID==-1){
-        std::cerr <<"Error: Cant find modID"<<std::endl;
-        exit(-1);};
+    if(layerID > 5){
+      for (int i = 6; i < 14; i++){
+          std::array<double, 3> modPos = ModPositionmap[i];
+          modPos[0] *= -1; //flip to match GEM coordinate system
+
+          // std::cout << "modID: " << i << " modPos: " << modPos[0] << std::endl;
+          // modPod[0] += 2*xSize; //make top 
+          // give 2 strip leeway:
+          double highEnd = modPos[0] + xSize/2;
+          double lowEnd = modPos[0] - xSize/2;
+          // std::cout << "lowEnd: " << lowEnd << " highEnd: " << highEnd << std::endl;
+          // if (hitX >= modPos[0] - xSize/2 && hitX <= modPos[0] + xSize/2)
+          if (hitX >= lowEnd && hitX <= highEnd)
+            {modID = i; break;}
+
+            // if (hitX >= modPos[0]*((i-6)%4) - 10*GetPitch() && hitX <= modPos[0]*((i-6)%4) + 10*GetPitch())
+
       }
+    if (modID == -1){
+        std::cerr << "Error: Can't find modID for hitX=" << hitX << std::endl;
+        exit(-1);
+    }
+    } else {
+      // For layers where a single module is expected, assign the layer ID (or reconsider this logic)
+      modID = layerID;
+    }
+    std::cout << "xGlobal:" << hitX << " modID: " << modID << std::endl;
       return modID;
   }
 
-  // TODO: use map file to associate adc etc directly with pos
 
-  UV_ROI XYtoUV_ROI(XY_ROI hitXY){
+
+  APVFinder::UV_ROI APVFinder::XYtoUV_ROI(APVFinder::XY_ROI hitXY){
  
-    TVector2 minXY = TVector2(hitXY.xMin, hitXY.yMin);
-    TVector2 maxXY = TVector2(hitXY.xMax, hitXY.yMax);
+    std::cout << "\n#Calling XYtoUV_ROI(): " << std::endl;
+
 
     UV_ROI thisUV_ROI;
 
     int layerID = hitXY.GEMLayer; 
     thisUV_ROI.GEMLayer = layerID;
+
+    std::cout << "LayerID: " << layerID << std::endl;
     
-    TVector2 hitUV;
+    std::array<int, 2> hitUV;
     
     // int modID;  
     
-    TVector3 modDims;
+    std::array<double , 3> modDims;
 
 
     int apvmap; //type of APV config/module type
@@ -1043,24 +826,84 @@ XY_ROI LoadLine(std::string &LineStr){
     //NOTE: Layers 0 and 1 are UVA X/W
     // if (layerID in range(0,6)){apvmap=2;}
     if (layerID >=0 && layerID<6 )
-    {apvmap=2; modDims=TVector3(1.5, .4, .001);}
-    else{apvmap=1; modDims=TVector3(.512, .6144, .001);};
+    // {apvmap=2; std::array<double, 3>modDims {1.5, .4, .001};}
+    {apvmap=2; 
+      modDims = {1.5, .4, .001};}
+    // else if (layerID >=6 && layerID<14){apvmap=1; std::array<double, 3>modDims {.512, .6144, .001};};
+    else if (layerID >=6 && layerID<14){apvmap=1; 
+      modDims = {.512, .6144, .001};};
+
+    std::cout << "APVMap(style): " << apvmap << std::endl;
+    std::cout << "ModDims: " << modDims[0] << " " << modDims[1] << " " << modDims[2] << std::endl;
 
 
-    thisUV_ROI.MinModID = GetModId(layerID, minXY, modDims);
-    thisUV_ROI.MaxModID = GetModId(layerID, maxXY, modDims);
+    // std::cout << "\nminX: " << hitXY.xMin //<< std::endl; std::cout 
+    // << " minXmodID: " << GetModId(layerID, hitXY.xMin) << std::endl;
 
+    // std::cout << "maxX: " << hitXY.xMax //<< std::endl; std::cout 
+    // << " maxXmodID: " << GetModId(layerID, hitXY.xMax) << std::endl;
+    
+    // std::cout << "minY: " << hitXY.yMin //<< std::endl; std::cout 
+    // << " minYmodID: " << GetModId(layerID, hitXY.yMin) << std::endl;
+
+    // std::cout << "maxY: " << hitXY.yMax //<< std::endl; std::cout 
+    // << " maxXmodID: " << GetModId(layerID, hitXY.yMax) << std::endl;
+
+
+    
     // auto localX=hitPos[0]-mod[modID].position;
     //relative to center of module
 
-    TVector2 currUVangs=GetUVang(layerID);
+    
+    //Take 4 corners of the XY ROI
+    std::array<double, 2>minXminY {hitXY.xMin, hitXY.yMin};
+    std::array<double, 2>maxXmaxY {hitXY.xMax, hitXY.yMax};
+    std::array<double, 2>minXmaxY {hitXY.xMin, hitXY.yMax};
+    std::array<double, 2>maxXminY {hitXY.xMax, hitXY.yMin};
 
+    
+    // thisUV_ROI.MinModID = GetModId(layerID, minXY, modDims);
+    // thisUV_ROI.MaxModID = GetModId(layerID, maxXY, modDims);
+    thisUV_ROI.MinModID = GetModId(layerID, minXminY[0]);
+    thisUV_ROI.MaxModID = GetModId(layerID, maxXmaxY[1]);
+
+    std::cout<< "\nMinModID(corresponding with xCoord of minXminY): " << thisUV_ROI.MinModID << std::endl;
+    std::cout<< "MaxModID(corresponding with yCoord of maxXmaxY): " << thisUV_ROI.MaxModID << std::endl;
+
+    
+    // std::array<int, 2> currUVangs(GetUVang(layerID));
+    std::array<double, 2>currUVangs (APVFinder::GetUVang(thisUV_ROI.MinModID));
+
+    std::cout << "\nUV Angles(For MinModID): " << currUVangs[0] << " " << currUVangs[1] << std::endl;
+    
     SetProjOps(currUVangs);
 
-    TVector2 minUV=XYtoUV(minXY); TVector2 maxUV=XYtoUV(maxXY);
+    //TODO: make local XYtoUV
+    // thisUV_ROI.Umin = XYtoUV(maxXminY)[0];
+    // thisUV_ROI.Vmin = XYtoUV(maxXmaxY)[1];
+    // thisUV_ROI.Umax = XYtoUV(minXmaxY)[0];
+    // thisUV_ROI.Vmax = XYtoUV(minXminY)[1];
 
-    thisUV_ROI.Umin = minUV.X(); thisUV_ROI.Vmin = minUV.Y();
-    thisUV_ROI.Umax = maxUV.X(); thisUV_ROI.Vmax = maxUV.Y();
+    // std::cout << "\nUmin: " << thisUV_ROI.Umin << " Vmin: " << thisUV_ROI.Vmin << std::endl;
+    // std::cout << "Umax: " << thisUV_ROI.Umax << " Vmax: " << thisUV_ROI.Vmax << std::endl;
+
+    //Turn Coordinates into APV positions along their axes
+    // thisUV_ROI.UminPos = GetAPVpos(thisUV_ROI.Umin);
+    // thisUV_ROI.VminPos = GetAPVpos(thisUV_ROI.Vmin);
+    // thisUV_ROI.UmaxPos = GetAPVpos(thisUV_ROI.Umax);
+    // thisUV_ROI.VmaxPos = GetAPVpos(thisUV_ROI.Vmax);
+    
+    thisUV_ROI.uMinAPVid = GetAPVpos(thisUV_ROI.MinModID, hitXY.xMax, hitXY.yMin, 0); 
+    thisUV_ROI.vMinAPVid = GetAPVpos(thisUV_ROI.MinModID, hitXY.xMax, hitXY.yMax, 1);
+    thisUV_ROI.uMaxAPVid = GetAPVpos(thisUV_ROI.MinModID, hitXY.xMin, hitXY.yMax, 0); 
+    thisUV_ROI.vMaxAPVid = GetAPVpos(thisUV_ROI.MinModID, hitXY.xMin, hitXY.yMin, 1);
+
+    std::cout << "\nuMinAPVid: " << thisUV_ROI.uMinAPVid << std::endl;
+    std::cout << "vMinAPVid: " << thisUV_ROI.vMinAPVid << std::endl;
+    std::cout << "uMaxAPVid: " << thisUV_ROI.uMaxAPVid << std::endl;
+    std::cout << "vMaxAPVid: " << thisUV_ROI.vMaxAPVid << std::endl;
+    
+   
     // TVector2 thisUV_ROI=XYtoUV(hitPos);  
 
     //NOTE: UV_ROI should now have
@@ -1070,11 +913,252 @@ XY_ROI LoadLine(std::string &LineStr){
   }
 
 
+  // int APVFinder::GetAPVpos(int layerID, int axis, double Coord){
 
+  //local u/v position in module
+  // int APVFinder::GetAPVpos(UV_ROI theUVROI){
+
+  // std::array<double, 2> APVFinder::GetXYLocal(XY_ROI theXYROI){
+  std::array<double, 2> APVFinder::GetXYLocal(int layerID, double xGlobal, double yGlobal){
+
+    //NOTE: x
+    
+    std::cout << "\n#Calling GetXYLocal(): " << std::endl;
+    std::cout << "GlobalXY: " << xGlobal << " " << yGlobal << std::endl;
+
+    int thisModID = GetModId(layerID, xGlobal);
+
+    // **Check for Invalid Module ID**
+    if (thisModID < 0 || thisModID >= gemInfoMap.size()) {
+        std::cerr << "Error: Invalid modID (" << thisModID << ") for xGlobal: " << xGlobal << "\n";
+        return {NAN, NAN}; // Return NaN to indicate failure
+    }
+
+    // Get module properties
+    double modX = gemInfoMap[thisModID].position[0]; // Module center X
+    double modY = gemInfoMap[thisModID].position[1]; // Module center Y
+    double modLength = gemInfoMap[thisModID].size[0]; // Module width
+
+    // **Shift xGlobal so that right edge is at x = 0**
+    double localX = xGlobal - (modX + modLength / 2); // Right edge of mod is x=0
+    double localY = yGlobal - modY; // Keep local Y relative to module center
+
+    std::cout << "LocalXY: " << localX << " " << localY << std::endl;
+
+    return {localX, localY};
+
+    // std::cout << "\n#Calling GetXYLocal(): " << std::endl;
+    // std::cout << "GlobalXY: " << xGlobal << " " << yGlobal << std::endl;
+
+    // //TODO: shift from 0(center of layer) to top of mod
+    // int thisModID = GetModId(layerID, xGlobal);
+
+    // double localX;
+    // double localY = yGlobal - gemInfoMap[thisModID].position[1];
+
+    // if (thisModID < 6){ 
+    //   localX = xGlobal + gemInfoMap[thisModID].size[0]/2;}
+
+    // else if (thisModID >= 6){
+    //   //NOTE: 2 mods = 2 whole mods
+    //   // return theXYROI.x - 2*(2*gemInfoMap[thisModID].size[0]);}
+    //   localX = xGlobal + 2*(gemInfoMap[thisModID].size[0]);}
+
+    //   std::cout << "LocalXY: " << localX << " " << localY << std::endl;
+
+    // return std::array<double, 2>{localX, localY};
+
+    }
+  
+    double APVFinder::GetXstripCenterLocal(int layerID, double xGlobal){
+
+    //NOTE: x
+    
+    std::cout << "\n#Calling GetXYLocal(): " << std::endl;
+    std::cout << "GlobalX: " << xGlobal  << std::endl;
+
+    int thisModID = GetModId(layerID, xGlobal);
+
+    // **Check for Invalid Module ID**
+    if (thisModID < 0 || thisModID >= gemInfoMap.size()) {
+        std::cerr << "Error: Invalid modID (" << thisModID << ") for xGlobal: " << xGlobal << "\n";
+        // return {NAN, NAN}; // Return NaN to indicate failure
+        return NAN;
+    }
+
+    // Get module properties
+    double modX = gemInfoMap[thisModID].position[0]; // Module center X
+    double modY = gemInfoMap[thisModID].position[1]; // Module center Y
+    double modLength = gemInfoMap[thisModID].size[0]; // Module width
+
+    double modTopPos = (modX)+(modLength/2); //top edge of module
+
+     
+    // **Shift xGlobal so that top edge is at x = 0 of module **
+    double localX = xGlobal + modTopPos;  
+
+    double stripCenter = localX+(GetUdx(GetModId(layerID, xGlobal)/2)); 
+    
+    
+    std::cout << "LocalX: " << localX << std::endl;
+
+    return localX;
+
+    // std::cout << "\n#Calling GetXYLocal(): " << std::endl;
+    // std::cout << "GlobalXY: " << xGlobal << " " << yGlobal << std::endl;
+
+    // //TODO: shift from 0(center of layer) to top of mod
+    // int thisModID = GetModId(layerID, xGlobal);
+
+    // double localX;
+    // double localY = yGlobal - gemInfoMap[thisModID].position[1];
+
+    // if (thisModID < 6){ 
+    //   localX = xGlobal + gemInfoMap[thisModID].size[0]/2;}
+
+    // else if (thisModID >= 6){
+    //   //NOTE: 2 mods = 2 whole mods
+    //   // return theXYROI.x - 2*(2*gemInfoMap[thisModID].size[0]);}
+    //   localX = xGlobal + 2*(gemInfoMap[thisModID].size[0]);}
+
+    //   std::cout << "LocalXY: " << localX << " " << localY << std::endl;
+
+    // return std::array<double, 2>{localX, localY};
+
+    }
+
+// bool APVFinder::aboveStripCenter(modID, xGlobal, yGlobal){
+//   if (yGlobal<0) 
+//   GetXstripCenterLocal(layerID, xGlobal)% GetUdx(modID)
+// }
+
+  // int APVFinder::GetAPVpos(modID, posXY){
+  // int APVFinder::GetAPVpos(int layerID, double xGlobal, double yGlobal, int axis){
+  int APVFinder::GetAPVpos(int modID, double xGlobal, double yGlobal, int axis){
+
+    std::cout << "\n#Calling GetAPVpos(): " << std::endl;
+    std::cout << "modID: " <<   modID << std::endl;
+
+    // int layerID = GetLayerOfMod(modID);
+    int layerID = gemInfoMap[modID].layer;
+    std::cout << "LayerID: " << layerID << std::endl;
+
+    SetProjOps(LayerUVang(modID));
+    // std::cout << "SetProjOps(" << LayerUVang.print() << ")" << std::endl;
+
+    // std::array<double, 2> localXY = GetXYLocal(layerID, xGlobal, yGlobal);
+    std::array<double, 2> localXY = GetXYLocal(layerID, xGlobal, yGlobal);   
+    
+    
+    
+    // if (GetXstripCenterLocal(layerID, xGlobal)% GetUdx(modID) < 0){//if Xlocal is>strip center
+    //   int localStrip;
+    //   localStrip = localXY[0]/GetUdx(modID);
+    // }
+    // // else if (GetXstripCenterLocal(layerID, xGlobal)% GetUdx(modID) < 0){//if Xlocal is>strip center
+    
+    // int localStrip;
+
+    // if (axis == 0){
+    //   std::cout << "localStrip in UV coords: " << localXY[0]/GetUdx(modID) << std::endl;
+    //   localStrip = int(localXY[0]/GetUdx(modID));}
+    // else if (axis == 1){
+    //   std::cout << "localStrip in UV coords: " << localXY[0]/GetVdx(modID) << std::endl;
+    //   localStrip = int(localXY[1]/GetVdx(modID));
+    //   }
+    
+    // if (hitX < hitCenter && hitY>0){ localStrip+=1;}
+    
+    // else if (hitX >= hitCenter && hitY<=0){localStrip-=1;}
+
+
+    int localStrip;
+    if (axis == 0){
+      std::cout << "localStrip in UV coords: " << localXY[0]/GetUdx(modID) << std::endl;
+      localStrip = int(localXY[0]/GetUdx(modID));}
+    else if (axis == 1){
+      std::cout << "localStrip in UV coords: " << localXY[0]/GetVdx(modID) << std::endl;
+      localStrip = int(localXY[1]/GetVdx(modID));
+
+      std::cout << "LocalStripid: " << localStrip << std::endl;
+
+      int APVpos = localStrip%128;
+      std::cout << "APVpos: " << APVpos << std::endl;
+    
+    return APVpos;
+    // return localStrip%128;
+
+    // if (axis == 0){ //U/X
+    //   return int((localUV[0]+GetUVoffset(layerID, axis))/GetPitch());}
+      
+    // else if (axis == 1){ //V/Y
+    //   return int((localUV[1]+GetUVoffset(layerID, axis))/GetPitch());}
+
+    }
+  }
+
+    // std::map<double, std::array<int, 2>> xToUVmap;
+    // std::map<double, std::array<int, 2>> yToUVmap;
+
+    
+    // int APVFinder::GetAPVpos(int layerID){
+    //   return std::array<int, 2>{GetAPVpos(layerID, 0), GetAPVpos(layerID, 1)};
+    // }
+
+  // bool APVFinder::isAboveStripCenter(int modID, double xLocal){
+  //   if (xLocal % GetUdx(modID) > 0) {return true;}
+  //   else {return false;};
+  // }
+
+
+    double APVFinder::GetUdx(int modID){
+      // SetProjOps(GetUVang(modID));
+      std::cout<< "\n#Calling GetUdx(modID): " << modID << std::endl;
+      Udy=gemInfoMap[modID].size[1];
+      std::cout<< "Udy(size): " << Udy << std::endl;
+
+      double Uang = gemInfoMap[modID].uvangles[0];
+      Udx=(Udy*sin(Uang))/cos(Uang);
+      std::cout<< "Udx: " << Udx << std::endl;
+      return Udx;
+    }
+
+    double APVFinder::GetVdx(int modID){
+      // SetProjOps(GetUVang(modID));
+      std::cout<< "\n#Calling GetVdx(modID): " << modID << std::endl;
+      Vdy=gemInfoMap[modID].size[1];
+      std::cout<< "Vdy(size): " << Udy << std::endl;
+      double Vang = gemInfoMap[modID].uvangles[1];
+      Vdx=(Vdy*sin(Vang))/cos(Vang);
+      std::cout<< "Vdx: " << Udx << std::endl;
+      return Vdx;
+    }
+
+
+    // void APVFinder::MakeXtoUVstripMap(int layerID){
+      
+    //   SetProjOps(LayerUVang(layerID));
+
+    //   double Udx = 
+
+    //   // int numStrips = GetNstrips(layerID, 0);
+    //   int numStrips = GetNstrips(layerID, 0);
+    //   for (int i=0; i<numStrips; i++){
+    //     XtoUVmap[i] = GetAPVpos(layerID, i, 0);
+    //   }
+    // }
+
+    // void APVFinder::MakeYtoUVstripMap(int layerID){
+    //   // int numStrips = GetNstrips(layerID, 1);
+    //   int numStrips = GetNstrips(layerID, 1);
+    //   for (int i=0; i<numStrips; i++){
+    //     YtoUVmap[i] = GetAPVpos(layerID, i, 1);
+    //   }
+    // }
 
 
   //"Inverse" of hitpos from SBSGEMModule::find_clusters_1D()
-  int hitposToStripID( TVector2 hitpos, int &Nstrips ){
+  // int hitposToStripID( std::array<int, 2> hitpos, int &Nstrips ){
     //NOTE: dont need b/c find APV by spatial extent instead
 
     //TODO: UV or XY hitpos?
@@ -1084,249 +1168,186 @@ XY_ROI LoadLine(std::string &LineStr){
     // + .5*fNstrips - .5);
 
     // return istrip;
-  }
+  // }
 
 
-void APVFinder::Clear( Option_t* opt){ //we will want to clear out many more things too
-    // Modify this a little bit so we only clear out the "hit counters", not necessarily the
-    // arrays themselves, to make the decoding more efficient:
 
-    THaSubDetector::Clear(opt);
-    
-    fNstrips_hit = 0;
-    fNstrips_hitU = 0;
-    fNstrips_hitV = 0;
-    fNstrips_hitU_neg = 0;
-    fNstrips_hitV_neg = 0;
-    fNdecoded_ADCsamples = 0;
-    fIsDecoded = false;
 
-    fClustering1DIsDone = false;
-    
-    fTrackPassedThrough = 0;
 
-    //numbers of strips passing basic zero suppression thresholds and timing cuts:
-    fNstrips_keep = 0;
-    fNstrips_keepU = 0;
-    fNstrips_keepV = 0;
-    //numbers of strips passing basic zero suppression thresholds, timing cuts, and higher max. sample and strip sum thresholds for
-    // local max:
-    fNstrips_keep_lmax = 0;
-    fNstrips_keep_lmaxU = 0;
-    fNstrips_keep_lmaxV = 0;
-    
-    
-    fNclustU = 0;
-    fNclustV = 0;
-    fNclustU_pos = 0;
-    fNclustV_pos = 0;
-    fNclustU_neg = 0;
-    fNclustV_neg = 0;
-    fNclustU_total = 0;
-    fNclustV_total = 0;
-    //later we may need to check whether this is a performance bottleneck:
-    fUclusters.clear();
-    fVclusters.clear();
-    fN2Dhits = 0;
-    //similar here:
-    fHits.clear();
+void APVFinder::TestGEMInfoMap(){
+  // APVFinder *anAPVFinder = new APVFinder();
 
-    fTrigTime = 0.0;
-    
-    fCM_online.assign(fN_MPD_TIME_SAMP,0.0);
-
-    fxcmin.clear();
-    fxcmax.clear();
-    fycmin.clear();
-    fycmax.clear();
-    
-    //fStripAxis.clear();
-    // fADCsamples1D.clear();
-    // fStripTrackIndex.clear();
-    // fRawADCsamples1D.clear();
-
-    // fStripIsU.clear();
-    // fStripIsV.clear();
-    // fStripADCavg.clear();
-    
-    // fUstripIndex.clear();
-    // fVstripIndex.clear();
-    // fStrip.clear();
-    // fAxis.clear();
-    // fADCsamples.clear();
-    // fRawADCsamples.clear();
-    // fADCsums.clear();
-    // fKeepStrip.clear();
-    // fMaxSamp.clear();
-    // fADCmax.clear();
-    // fTmean.clear();
-    // fTsigma.clear();
-    // fTcorr.clear();
-
-    //THaSubDetector::Clear(opt);
+  fillGEMInfoMap();
+  printGEMinfoMap();
+  OutputGEMinfoMap();
 }
 
-  // TVector2 minXminY;
-  // TVector2 minXmaxY;
-  // TVector2 maxXminY;
-  // TVector2 maxXmaxY;
-  
-  roiSquare={{minXminY}, {minXmaxY}, {maxXminY}, {maxXmaxY}};
+void APVFinder::TestAPVInfoMap(const char* refFile){
+  // APVFinder *anAPVFinder = new APVFinder();
 
-
-// }
-
+  MakeRefMap(refFile);
+  printAPVinfoMap();
+  OutputAPVinfoMap();
+}
 
 // ################################################################
 
+// FindAPV general outline
+ // 1) xyHit => uvHit 
+      // i) LoadLine => ECalBin GEMLayer xMin xMax yMin yMax
+      //ii)(layer, xMin, xMax, yMin, yMax) => (uMin, uMax, vMin, vMax)
 
-// int FindAPV(ifstream aHitFile){
 
-void FindAPV(const TDatime& date, const char *aHitFile){
+    // 2) uvHit => APVinfo
+      //need apvInfoKeys: module id, axis, position on axis
+      // i) GetModId(layer, xMin, xMax)=>minMod,maxMod
+      // ii) TODO: Get INTEGER position on axis assuming "-x" is positive for u,v
+      // iii) GetAPV(min/max Mod, 0, min/max UAPVnum)=> minU APV info, max U APV info, minV APV info, maxV APV info
+      // iv) pushback(minU APV info, max U APV info, minV APV info, maxV APV info)
 
-  // using namespace APVFinder;
-  using namespace APVFindingSpace;
+// void FindAPV(const TDatime& date, const char *aHitFile){
 
+
+
+  //GEM and APV print tests
+void FindAPV(){
+  
   APVFinder *anAPVFinder = new APVFinder();
   
-  // for testing purposes
-  anAPVFinder->MakeRefMap("db_sbs.gemFT_TEST.txt");
+  anAPVFinder->TestGEMInfoMap();
+  anAPVFinder->TestAPVInfoMap("db_sbs.gemFT_TEST.txt");
 
-  printAPVinfoMap();
+}
+  
+  
+// int FindAPV(ifstream aHitFile){
+
+// int FindAPV(const char* aHitFile){
+// void FindAPV(){
+//   const char* aHitFile = "ECALtoGEMhitEx.txt";
+
+//   APVFinder *anAPVFinder = new APVFinder();
+  
+//   anAPVFinder->fillGEMInfoMap(); anAPVFinder->MakeRefMap("db_sbs.gemFT_TEST.txt");
+
+//   // apvInfoMap = anAPVFinder->apvInfoMap;
+
+//   // int chanPerAPV=APVFinder->GetstripsPerAPV();  
+//   int chanPerAPV=128;
 
 
+//   std::ifstream hitFile(aHitFile);  
 
-
-  int chanPerAPV=128;
-
-
-  std::ifstream hitFile(aHitFile);  
-
-  if (!hitFile.is_open()) {  // Check if the file opened successfully
-      std::cerr << "Unable to open file\n";
-      // return 1;
-  }
+//   if (!hitFile.is_open()) {  // Check if the file opened successfully
+//       std::cerr << "Unable to open file\n";
+//       // return 1;
+//   }
  
 
-  ReadDB(date); 
+//   // ReadDB(date); 
   
-  // DBfile = 
+//   // DBfile = 
 
-  // makeAPVid(date);
+//   // makeAPVid(date);
 
-  std::string currLine;
+//   std::string currLine;
 
-  // std::vector<LocalROIInfo> localHitMap; 
+//   // std::vector<LocalROIInfo> localHitMap; 
 
-  // skip first line(Column headers)
-  std::getline(hitFile, currLine);
+//   // skip first line(Column headers)
+//   std::getline(hitFile, currLine);
 
-  int lineCount = 1;
+//   int hitCount = 0;//0
+//   int lineCount = hitCount+2;//1
   
-  while (std::getline(hitFile, currLine)) {
-
-    UV_ROI thisUV_ROI;
-    // thisUV_ROI.lineNumber=lineCount;
+//   while (std::getline(hitFile, currLine)) {
     
-    // std::stringstream lineStream(currLine);
-    
-    XY_ROI currHit = anAPVFinder->LoadLine(currLine);
-    // HitInfo currHit = LoadLine(currLine);
-    
-    if (currHit.lineNumber == -1) {continue;}
+//     APVFinder::UV_ROI thisUV_ROI;
 
-    //Add the txt file line number just for sake of indexing/debugging
-    currHit.lineNumber=lineCount;
+//     // 1) xyHit => uvHit 
+//       // i) LoadLine => ECalBin GEMLayer xMin xMax yMin yMax
+      
+//       APVFinder::XY_ROI currHit = anAPVFinder->LoadLine(currLine);
+//       // HitInfo currHit = LoadLine(currLine);
+      
+//       if (currHit.lineNumber == -1) {continue;}//skip line if it has NaN values
 
-    // thisUV_ROI.GEMLayer=currHit.GEMLayer;
-    
-    int minGemID = GetModId(currHit.GEMLayer, currHit.xMin);
-    int maxGemID = GetModId(currHit.GEMLayer, currHit.xMax);
-    
-    //Take 4 corners of the XY ROI 
-    TVector2 minXminY = TVector2(currHit.xMin, currHit.yMin);
-    TVector2 maxXmaxY = TVector2(currHit.xMax, currHit.yMax);
-    TVector2 minXmaxY = TVector2(currHit.xMin, currHit.yMax);
-    TVector2 maxXminY = TVector2(currHit.xMax, currHit.yMin);
-    
-    //Needs to be over whole layer 
-    double uMin = XYtoUV(maxXminY).X();
-    double vMin = XYtoUV(maxXmaxY).Y();
-    double uMax = XYtoUV(minXmaxY).X();
-    double vMax = XYtoUV(minXminY).Y();
+//       std::cout << "\n\n--------------------------------------------------------------------"<<"\nLine: " << lineCount << "  Hit Entry number " << hitCount << std::endl;
+      
+//       currHit.lineNumber=lineCount;//Add the txt file line number just for sake of indexing/debugging
+      
+//       currHit.hitNumber=hitCount;
 
-    
-    
-
-    //Fill all but APVids
-    UV_ROI thisUV_ROI = XYtoUV_ROI(currHit);
+//       currHit.print();
+      
+//       //ii)(layer, xMin, xMax, yMin, yMax) => (uMin, uMax, vMin, vMax)
+//       thisUV_ROI = anAPVFinder->XYtoUV_ROI(currHit);
 
 
-    GetModAPVnum(thisUV_ROI.
-    );
+//       APVFinder::apvInfoKeys UminAPVinfoKeys;
+//       UminAPVinfoKeys.gemid = thisUV_ROI.MinModID;
+//       UminAPVinfoKeys.axis = 0;
+//       UminAPVinfoKeys.pos = thisUV_ROI.uMinAPVid;
 
+//       APVFinder::apvInfoKeys UmaxAPVinfoKeys;
+//       UmaxAPVinfoKeys.gemid = thisUV_ROI.MaxModID;
+//       UmaxAPVinfoKeys.axis = 0;
+//       UmaxAPVinfoKeys.pos = thisUV_ROI.uMaxAPVid;
 
-    thisUV_ROI.lineNumber=lineCount;
-    
-    thisUV_ROI.GEMLayer=currHit.GEMLayer;
+//       APVFinder::apvInfoKeys VminAPVinfoKeys;
+//       VminAPVinfoKeys.gemid = thisUV_ROI.MinModID;
+//       VminAPVinfoKeys.axis = 1;
+//       VminAPVinfoKeys.pos = thisUV_ROI.vMinAPVid;
 
-    thisUV_ROI.MinModID=minGemID;
-    thisUV_ROI.MaxModID=maxGemID;
+//       APVFinder::apvInfoKeys VmaxAPVinfoKeys;
+//       VmaxAPVinfoKeys.gemid = thisUV_ROI.MaxModID;
+//       VmaxAPVinfoKeys.axis = 1;
+//       VmaxAPVinfoKeys.pos = thisUV_ROI.vMaxAPVid;
 
-    TVector2 minUVpos = TVector2(thisUV_ROI.Umin, thisUV_ROI.Vmin);
-    
-    TVector2 maxUVpos = TVector2(thisUV_ROI.Umax, thisUV_ROI.Vmax);
+     
+//       APVFinder::roiAPVinfo thisroiAPVinfo;
+//       thisroiAPVinfo.uMaxAPVinfoVals = anAPVFinder->apvInfoMap[UmaxAPVinfoKeys];
+//       std::cout << "\nUmaxAPVinfoKeys: " << UmaxAPVinfoKeys.gemid << " " << UmaxAPVinfoKeys.axis << " " << UmaxAPVinfoKeys.pos << std::endl;
+//       std::cout << "UmaxAPVinfoVals: " << thisroiAPVinfo.uMaxAPVinfoVals.vtpcrate<<" "<< thisroiAPVinfo.uMaxAPVinfoVals.fiber << " " << thisroiAPVinfo.uMaxAPVinfoVals.adc_ch << std::endl;
 
+//       thisroiAPVinfo.uMinAPVinfoVals = anAPVFinder->apvInfoMap[UminAPVinfoKeys];
+//       std::cout << "\nUminAPVinfoKeys: " << UminAPVinfoKeys.gemid << " " << UminAPVinfoKeys.axis << " " << UminAPVinfoKeys.pos << std::endl;
+//       std::cout << "UminAPVinfoVals: " << thisroiAPVinfo.uMinAPVinfoVals.vtpcrate<<" "<< thisroiAPVinfo.uMinAPVinfoVals.fiber << " " << thisroiAPVinfo.uMinAPVinfoVals.adc_ch << std::endl;
 
-    //TODO: make this func
-    //TODO: is this hitpos??? 	double hitpos = (istrip + 0.5 - 0.5*Nstrips) * pitch + offset;
+//       thisroiAPVinfo.vMaxAPVinfoVals = anAPVFinder->apvInfoMap[VmaxAPVinfoKeys];
+//       std::cout << "\nVmaxAPVinfoKeys: " << VmaxAPVinfoKeys.gemid << " " << VmaxAPVinfoKeys.axis << " " << VmaxAPVinfoKeys.pos << std::endl;
+//       std::cout << "VmaxAPVinfoVals: " << thisroiAPVinfo.vMaxAPVinfoVals.vtpcrate<<" "<< thisroiAPVinfo.vMaxAPVinfoVals.fiber << " " << thisroiAPVinfo.vMaxAPVinfoVals.adc_ch << std::endl;
 
-    int minU_APVpos = GetAPVpos(uMin);
-    int maxU_APVpos = GetAPVpos(uMax);
-    int minV_APVpos = GetAPVpos(vMin);
-    int maxV_APVpos = GetAPVpos(vMax);
+//       thisroiAPVinfo.vMinAPVinfoVals = anAPVFinder->apvInfoMap[VminAPVinfoKeys];
+//       std::cout << "\nVminAPVinfoKeys: " << VminAPVinfoKeys.gemid << " " << VminAPVinfoKeys.axis << " " << VminAPVinfoKeys.pos << std::endl;
+//       std::cout << "VminAPVinfoVals: " << thisroiAPVinfo.vMinAPVinfoVals.vtpcrate<<" "<< thisroiAPVinfo.vMinAPVinfoVals.fiber << " " << thisroiAPVinfo.vMinAPVinfoVals.adc_ch << std::endl;
 
+      
+//       //store the current hits line number and APV info
+//       // anAPVFinder->roiAPVmap[lineCount] = thisroiAPVinfo;
+//       anAPVFinder->roiAPVmap[hitCount] = thisroiAPVinfo;
 
+      
+//     // std::cout << "\nLine: " << lineCount << std::endl;
 
-    //last value is position on axis
-    apvInfoVals minU_APVdef = GetAPV(minGemID, 0, minUAPVnum);
-    apvInfoVals maxU_APVdef = GetAPV(
-      maxGemID,0, maxUAPVnum);
-    apvInfoVals minV_APVdef = GetAPV(
-      minGemID, 1, minVAPVnum);
-    apvInfoVals maxV_APVdef = GetAPV(
-      maxGemID, 1, maxVAPVnum);
+//     // UminAPVinfoKeys.print(); UmaxAPVinfoKeys.print(); VminAPVinfoKeys.print(); VmaxAPVinfoKeys.print(); 
 
-    //TODO: Dont worry about inversion! only dictates direction of readout of APV strips 
+//     std::cout << "\nROI:______________________________" << std::endl;
+//     currHit.print();
+//     thisroiAPVinfo.print();
 
-    thisUV_ROI.uMinAPVid = UorVtoAPVid(thisUV_ROI.MinModID, minUVpos, 0);
-    thisUV_ROI.vMinAPVid = UorVtoAPVid(thisUV_ROI.MinModID, minUVpos, 1);
-    
-    thisUV_ROI.uMaxAPVid = UorVtoAPVid(thisUV_ROI.MaxModID, maxUVpos, 0);
-    thisUV_ROI.vMaxAPVid = UorVtoAPVid(thisUV_ROI.MaxModID, maxUVpos, 1);
+//     lineCount++;
+//     hitCount++;
 
+//   }
 
-    //TODO: make it so that all APVs btwn min max are explicitly active?
+//   // anAPVFinder->printRoiAPVMap();
+//   // anAPVFinder->OutputRoiAPVMap();
 
-    thisUV_ROI.print();
-    
-
-    ROI_APV_map.push_back(thisUV_ROI);
-    // ROI_APV_map.push(thisAPV);
-
-    lineCount++;
-
-    //NOTE: I dont think I need b/c redeclared every loop
-    // currHit.clear();
-    // thisUV_ROI.clear();
-
-  }
-
-
-  hitFile.close();
-  // return 0;
+//   hitFile.close();
+//   // return 0;
 
   
-}
+// }
 
 
