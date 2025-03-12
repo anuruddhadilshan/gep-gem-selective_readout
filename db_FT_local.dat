@@ -1,11 +1,182 @@
+## MUST BE DEFINED FIRTS ##
+nlayers 8
+nmodules 14
+##
+
+# Assign Layers to each module.
+m0.layer 0
+m1.layer 1
+m2.layer 2
+m3.layer 3
+m4.layer 4
+m5.layer 5
+m6.layer 6
+m7.layer 6
+m8.layer 6
+m9.layer 6
+m10.layer 7
+m11.layer 7
+m12.layer 7
+m13.layer 7
+
+# Strip angle definitions.
+m0.uangle 180.0
+m0.vangle 135.0
+
+m1.uangle 180.8
+m1.uangle -135.0
+
 m2.uangle 150.0
 m2.vangle -150.0
+
+m3.uangle 150.0
+m3.vangle -150.0
+
+m4.uangle 150.0
+m4.vangle -150.0
+
+m5.uangle 150.0
+m5.vangle -150.0
+
+m6.uangle 0.0
+m6.vangle -90.0
+m7.uangle 0.0
+m7.vangle -90.0
+m8.uangle 0.0
+m8.vangle -90.0
+m9.uangle 0.0
+m9.vangle -90.0
+
+m10.uangle 0.0
+m10.vangle -90.0
+m11.uangle 0.0
+m11.vangle -90.0
+m12.uangle 0.0
+m12.vangle -90.0
+m13.uangle 0.0
+m13.vangle -90.0
+
+
+# Strip coordinate system offset from the center of the GEM active area in each strip direction.
+m0.uoffset 0.0176
+m0.voffset 0
+
+m1.uoffset 0.0176
+m1.voffset 0
+
 m2.uoffset 0.0108
 m2.voffset 0.0108
+
+m3.uoffset 0.0108
+m3.voffset 0.0108
+
+m4.uoffset 0.0108
+m4.voffset 0.0108
+
+m5.uoffset 0.0108
+m5.voffset 0.0108
+
+m6.uoffset 0.0
+m6.voffset 0.0
+m7.uoffset 0.0
+m7.voffset 0.0
+m8.uoffset 0.0
+m8.voffset 0.0
+m9.uoffset 0.0
+m9.voffset 0.0
+
+m10.uoffset 0.0
+m10.voffset 0.0
+m11.uoffset 0.0
+m11.voffset 0.0
+m12.uoffset 0.0
+m12.voffset 0.0
+m13.uoffset 0.0
+m13.voffset 0.0
+
+# Numer of U and V strips.
+m0.nstripsu 3968
+m0.nstripsv 3456
+
+m1.nstripsu 3968
+m1.nstripsv 3456
+
 m2.nstripsu 3840
 m2.nstripsv 3840
-upitch 0.0004
-vpitch 0.004
 
-m2.position 0 0 0.202
+m3.nstripsu 3840
+m3.nstripsv 3840
+
+m4.nstripsu 3840
+m4.nstripsv 3840
+
+m5.nstripsu 3840
+m5.nstripsv 3840
+
+m6.nstripsu 1280
+m6.nstripsv 1536
+m7.nstripsu 1280
+m7.nstripsv 1536
+m8.nstripsu 1280
+m8.nstripsv 1536
+m9.nstripsu 1280
+m9.nstripsv 1536
+
+m10.nstripsu 1280
+m10.nstripsv 1536
+m11.nstripsu 1280
+m11.nstripsv 1536
+m12.nstripsu 1280
+m12.nstripsv 1536
+m13.nstripsu 1280
+m13.nstripsv 1536
+
+# Strip pitches in U and V strips. Always 400 um.
+upitch 0.0004
+vpitch 0.0004
+
+# GEM module sizes.
+m0.size 1.5 0.4 0.001
+
+m1.size 1.5 0.4 0.001
+
 m2.size 1.5 0.4 0.001
+
+m3.size 1.5 0.4 0.001
+
+m4.size 1.5 0.4 0.001
+
+m5.size 1.5 0.4 0.001
+
+m6.size 0.512 0.6144 0.001
+m7.size 0.512 0.6144 0.001
+m8.size 0.512 0.6144 0.001
+m9.size 0.512 0.6144 0.001
+
+m10.size 0.512 0.6144 0.001
+m11.size 0.512 0.6144 0.001
+m12.size 0.512 0.6144 0.001
+m13.size 0.512 0.6144 0.001
+
+# GEM module positions.
+m0.position 0     0     0
+
+m1.position 0     0     0.075  
+
+m2.position 0     0     0.202
+
+m3.position 0     0     0.341
+
+m4.position 0     0     0.484
+
+m5.position 0     0     0.624
+
+m6.position -0.766 0     0.769
+m7.position -0.256  0    0.737
+m8.position 0.256  0    0.769
+m9.position 0.765  0    0.737
+
+m10.position -0.766  0    0.897
+m11.position -0.256  0    0.865
+m12.position 0.256  0    0.897
+m13.position 0.765  0    0.865

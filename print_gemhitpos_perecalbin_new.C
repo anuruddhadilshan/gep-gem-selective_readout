@@ -255,7 +255,9 @@ void writeROIToFile(const std::vector<std::vector<ROI>>& vvROI, const std::strin
             const ROI& roi = vvROI[i][j];
 
             // Write data in a structured format
-            outFile << i << " " << j << " " << roi.xMin << " " << roi.xMax << " " << roi.yMin << " " << roi.yMax << "\n";
+            // IMPORTANT: To reflect the actual physical setup, we have drawn the Transport coordinate system X axisi on the histogram vertical axis and the Y axisi on histogram horizontal axis.
+            // But in order to compare with the DB GEM positions we should put these back to transport coordiates.
+            outFile << i << " " << j << " " << roi.yMin << " " << roi.yMax << " " << roi.xMin << " " << roi.xMax << "\n";
         }
     }
 
@@ -292,7 +294,7 @@ void print_gemhitpos_perecalbin_new( const char* simfilename = "dummy" )
 	T->SetBranchStatus("Harm.FT.Track.ntracks", 1);
 	T->SetBranchStatus("Harm.FT.Track.MID", 1);
 	T->SetBranchStatus("Harm.FT.Track.NumHits", 1);
-	T->SetBranchStatus("Harm.HCalScint.hit.sumedep", 1);
+	//T->SetBranchStatus("Harm.HCalScint.hit.sumedep", 1);
 
 	int n_ecalhits {0};
 	int n_gemhits {0};
@@ -304,11 +306,13 @@ void print_gemhitpos_perecalbin_new( const char* simfilename = "dummy" )
 	std::vector<double>* ecalhit_ycell = nullptr;
 	std::vector<int>* gemhit_plane = nullptr;
 	std::vector<double>* gemhit_x = nullptr;
+	const double g4sbsFT_xoffset { 0.165 }; // This need to be added to the Harm.FT.hit.x value to get the GEM hit pos in X with the origin of the coordinate system centered at the GEM module origin.
+	// This is because G4SBS TRASPORT coordinate origin is at the heigh of the beam heigh and NOT at the height of the FT first GEM layer's active area center.	
 	std::vector<double>* gemhit_y = nullptr;
 	int n_gemtracks {0};
 	std::vector<int>* gemtrack_mid = nullptr;
 	std::vector<int>* gemtrack_numhits = nullptr;
-	std::vector<double>* hcalScintHit_sumedep = nullptr;
+	//std::vector<double>* hcalScintHit_sumedep = nullptr;
 
 	T->SetBranchAddress("Earm.ECalTF1.hit.nhits", &n_ecalhits);
 	T->SetBranchAddress("Earm.ECalTF1.hit.row", &ecalhit_row);
@@ -324,7 +328,7 @@ void print_gemhitpos_perecalbin_new( const char* simfilename = "dummy" )
 	T->SetBranchAddress("Harm.FT.Track.ntracks", &n_gemtracks);
 	T->SetBranchAddress("Harm.FT.Track.MID", &gemtrack_mid);
 	T->SetBranchAddress("Harm.FT.Track.NumHits", &gemtrack_numhits);
-	T->SetBranchStatus("Harm.HCalScint.hit.sumedep", &hcalScintHit_sumedep);
+	//T->SetBranchStatus("Harm.HCalScint.hit.sumedep", &hcalScintHit_sumedep);
 
 	// Initialize the ECalbin class.
 	Ecalbin ecalbin{};
@@ -395,7 +399,7 @@ void print_gemhitpos_perecalbin_new( const char* simfilename = "dummy" )
 		for ( int ihit = 0; ihit < n_gemhits; ihit++ )
 		{
 			//gemhitlayer_hists[ gemhit_plane->at(ihit) - 1 ]->Fill( gemhit_y->at(ihit), gemhit_x->at(ihit) );
-			gemhithists_perecalbin[ecal_bin_no][gemhit_plane->at(ihit) - 1]->Fill( gemhit_y->at(ihit), gemhit_x->at(ihit) );
+			gemhithists_perecalbin[ecal_bin_no][gemhit_plane->at(ihit) - 1]->Fill( gemhit_y->at(ihit), gemhit_x->at(ihit) + g4sbsFT_xoffset );
 		}
 
 	}

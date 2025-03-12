@@ -6,10 +6,10 @@ double mod_max_x, mod_min_x, mod_max_y, mod_min_y;
 
 double uangle, vangle;
 
-double roi_max_x {0.4};
-double roi_min_x {0.15};
+double roi_max_x {0.23};
+double roi_min_x {-0.15};
 double roi_max_y {0.14};
-double roi_min_y {-0.23};
+double roi_min_y {-0.25};
 
 TVector2 XYtoUV( TVector2 XY )
 {
@@ -24,7 +24,7 @@ TVector2 XYtoUV( TVector2 XY )
 
 int return_istrip( double hitpos, int Nstrips, double pitch, double offset )
 {
-  return static_cast<int>(std::ceil( (hitpos - offset)/pitch + 0.5*Nstrips - 0.5 ) );
+  return static_cast<int>(std::round( (hitpos - offset)/pitch + 0.5*Nstrips - 0.5 ) );
 }
 
 bool isPointInModule( const double x, const double y  )
@@ -36,10 +36,10 @@ bool isPointInModule( const double x, const double y  )
 
 void testdb( const double x, const double y)
 {
-  DBread dbread {};
+  //DBread dbread {};
 
-  uangle = dbread.return_uang();
-  vangle = dbread.return_vang();
+  uangle = 150.0;
+  vangle = -150.0;
 
   fPxU = cos( uangle * TMath::DegToRad() );
   fPyU = sin( uangle * TMath::DegToRad() );
@@ -83,6 +83,11 @@ void testdb( const double x, const double y)
   TVector2 UV_ROI_2 = XYtoUV( XY_ROI_2 );
   TVector2 UV_ROI_3 = XYtoUV( XY_ROI_3 );
   TVector2 UV_ROI_4 = XYtoUV( XY_ROI_4 );
+
+  std::cout << "UV ROI 1 " << UV_ROI_1.X() << " " << UV_ROI_1.Y() << endl;
+  std::cout << "UV ROI 2 " << UV_ROI_2.X() << " " << UV_ROI_2.Y() << endl;
+  std::cout << "UV ROI 3 " << UV_ROI_3.X() << " " << UV_ROI_3.Y() << endl;
+  std::cout << "UV ROI 4 " << UV_ROI_4.X() << " " << UV_ROI_4.Y() << endl;
 
   std::map < int, std::pair< int, int > > roi_UV;
 
