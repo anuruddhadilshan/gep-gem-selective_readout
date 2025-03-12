@@ -1,24 +1,12 @@
 #include "DBread.h"
 
-<<<<<<< HEAD
-#include "TVector2.h"
-#include "TMath.h"
-=======
 // #include "TVector2.h"
 // #include "TMath.h"
->>>>>>> origin/main
 #include <iostream>
 #include <map>
 #include <array>
 #include <vector>
 #include <set>
-<<<<<<< HEAD
-
-
-#include "GetchanMap.cxx"
-
-
-=======
 // #include <pair.h>
 
 
@@ -36,16 +24,16 @@
 // }
 
 
-std::map<int, std::pair<std::pair<std::set<int>, std::set<apvInfoVals>>, std::pair<std::set<int>, std::set<apvInfoVals>>>> UVstripToAPV(){
+std::map<int, std::pair<std::map<int, apvInfoVals>, std::map<int, apvInfoVals>>> UVstripToAPV(){
 
-    std::map< int, std::pair< std::set<int>, std::set<int> > > modStrips;
+    std::map<int, std::pair<std::set<int>,std::set<int>>> modStrips;// modID=>{Ustrips, Vstrips}
 
     // std::set<int>modIDs=modStripCounts~map;
     //  <modID < Ustrip, info> <
     std::map< int, //modID
         std::pair< 
-                std::pair<std::set<int>, std::set<apvInfoVals>>, //U strip number, APV info(vtpCrate, fiber, adc_ch)
-                std::pair <std::set<int>, std::set<apvInfoVals>> // Vstrip number, (vtpCrate, fiber, adc_ch)
+                std::map<int, apvInfoVals>, //U strip number, APV info(vtpCrate, fiber, adc_ch)
+                std::map<int, apvInfoVals> // Vstrip number, (vtpCrate, fiber, adc_ch)
     > > modUVstripAPVs;
 
     std::map<apvInfoKeys, apvInfoVals> apvInfoMap = GetchanMap("db_sbs.gemFT_TEST.txt");
@@ -55,55 +43,53 @@ std::map<int, std::pair<std::pair<std::set<int>, std::set<apvInfoVals>>, std::pa
     // GetGemInfoMap();
     // printGEMinfoMap();
 
-    for (auto [mod, uvStrips] : modStrips) {
+    for (auto &[mod, uvStrips] : modStrips) {
         // for (mod)
 
         std::set<int>uStrips = uvStrips.first;
         std::set<int>vStrips = uvStrips.second;
 
-        int nStripsU = uStrips.size();
-        int nStripsV = vStrips.size();
+        // int nStripsU = uStrips.size();
+        // int nStripsV = vStrips.size();
         
-        std::pair<std::set<int>, std::set<apvInfoVals>> uStripInfo;//<stripNum, info
-        std::pair<std::set<int>, std::set<apvInfoVals>> vStripInfo;//<stripNum, info
+        //strip Num => APV
+        std::map<int, apvInfoVals> uStripInfo;
+        std::map<int, apvInfoVals> vStripInfo;
 
-
-        for (int stripID = 0; stripID < uStrips.size(); stripID++){
-
+        for (int stripID : uStrips){
+            
             apvInfoKeys currStripKeys;
             currStripKeys.gemid = mod;
             currStripKeys.axis = 0;
             // apvInfoVals currStripInfo;
 
             // currStripKeys.pos = StripToAPVpos(int strip, int axis);
-            currStripKeys.pos = static_cast<int>(stripID/128);
+            currStripKeys.pos = stripID/128;//APV position
+            // posInAPV = stripID%128;
 
-            uStripInfo.first.emplace(stripID);
-            uStripInfo.second.emplace(apvInfoMap[currStripKeys]);            
+            if (apvInfoMap.find(currStripKeys) != apvInfoMap.end()) {
+                uStripInfo[stripID] = apvInfoMap[currStripKeys];  // Store unique strip -> APV mapping
+            }
         }
-        
-        for (int stripID = 0; stripID < vStrips.size(); stripID++){ 
+       
+        for (int stripID : vStrips){
+            
             apvInfoKeys currStripKeys;
             currStripKeys.gemid = mod;
             currStripKeys.axis = 1;
             // apvInfoVals currStripInfo;
 
             // currStripKeys.pos = StripToAPVpos(int strip, int axis);
-            currStripKeys.pos = static_cast<int>(stripID/128);
-            
-            vStripInfo.first.emplace(stripID);
-            vStripInfo.second.emplace(apvInfoMap[currStripKeys]);
+            currStripKeys.pos = stripID/128;//APV position
+            // posInAPV = stripID%128;
 
+            if (apvInfoMap.find(currStripKeys) != apvInfoMap.end()) {
+                uStripInfo[stripID] = apvInfoMap[currStripKeys];  // Store unique strip -> APV mapping
+            }
         }
-        modUVstripAPVs[mod].first.first.emplace(uStripInfo.first);
-        modUVstripAPVs[mod].first.second.emplace(uStripInfo.first);
-        modUVstripAPVs[mod].second.first.emplace(uStripInfo.second);
-        modUVstripAPVs[mod].second.second.emplace(uStripInfo.second);
+
+        modUVstripAPVs[mod] = {uStripInfo, vStripInfo};
 
     }
-
     return modUVstripAPVs;
-
-
 }
->>>>>>> origin/main
