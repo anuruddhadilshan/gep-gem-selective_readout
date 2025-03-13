@@ -154,8 +154,14 @@ void MakechanMap(const char* refFile) {
                      >> currAPVvals.invert
                      >> currAPVkeys.axis;
 
-          currAPVvals.invert = SetInvert(currAPVvals.invert);
+          
+          
+          
+                    //  currAPVvals.invert = SetInvert(currAPVvals.invert);
 
+
+
+                     
           apvInfoMap[currAPVkeys] = currAPVvals;
       } else {
           currentM = -1;  // Reset if empty line encountered
