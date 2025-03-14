@@ -96,6 +96,7 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 				// RREDIT:Start
 				std::set<int>uStrips = modUVstripPair.first;
 				std::set<int>vStrips = modUVstripPair.second;
+				//RREDIT:END
 
 				for (int stripID : uStrips){
 					apvInfoKeys currStripKeys;
@@ -106,11 +107,11 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 					currStripKeys.pos = stripID/128;//APV position
 					// posInAPV = stripID%128;
 
-					// std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
-					// << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
+					std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
+					<< " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
 					if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
-						std::cout << "\n\n\nFor strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
-						currStripKeys.pos << " NOT FOUND!" << std::endl;
+						std::cout << "\nFor ECal Bin " << binNum <<" For strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
+						currStripKeys.pos << " NOT FOUND!\n" << std::endl;
 						missingKeys.emplace(currStripKeys);
 					}
 		
@@ -130,12 +131,12 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 					currStripKeys.pos = (stripID/128);//APV position(-1 so index starts at 0)
 					// posInAPV = stripID%128;
 
-					// std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
-					// << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
+					std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
+					<< " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
 					
 					if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
-						std::cout << "\n\n\nFor strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
-						currStripKeys.pos << " NOT FOUND!" << std::endl;
+						std::cout << "\nFor ECal Bin " << binNum <<" For strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
+						currStripKeys.pos << " NOT FOUND!\n" << std::endl;
 						missingKeys.emplace(currStripKeys);
 					}
 		
