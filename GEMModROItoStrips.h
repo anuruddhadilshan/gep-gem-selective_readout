@@ -132,10 +132,10 @@ public:
   		// std::cout << "V strip " << roi_V_strip_min << " " << roi_V_strip_max << endl;
 
   		m_uStrips.clear();
-  		for ( int iUstrip = roi_U_strip_min; iUstrip <= roi_U_strip_max; iUstrip++ ) m_uStrips.insert(iUstrip);
+  		for ( int iUstrip = roi_U_strip_min; iUstrip </* = */ roi_U_strip_max; iUstrip++ ) m_uStrips.insert(iUstrip);
   		
   		m_vStrips.clear();
-  		for ( int iVstrip = roi_V_strip_min; iVstrip <= roi_V_strip_max; iVstrip++ ) m_vStrips.insert(iVstrip);
+  		for ( int iVstrip = roi_V_strip_min; iVstrip </* = */ roi_V_strip_max; iVstrip++ ) m_vStrips.insert(iVstrip);
   		
   		m_uvStrips_pair = std::make_pair(m_uStrips, m_vStrips);
   		
