@@ -6,6 +6,7 @@
 
 
 
+
 int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const std::string& roi_file = "ROI_GEP3_FT_1.txt" )
 {
 
@@ -15,7 +16,7 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 
 	if ( db.returnFileReadStatus() == -1 || roi.returnFileReadStatus() == -1 )
 	{
-		std::cerr << "Exiting the program!!!" << endl << endl;
+		std::cerr << "Exiting the program!!!" << std::endl << std::endl;
 
 		return -1;
 	}
@@ -25,10 +26,10 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 	std::map< int, std::map< int, ROI > > map_ROIsByBinsAndLayers = roi.return_ROIMap();
 
 	int nECalBins = map_ROIsByBinsAndLayers.size();
-	std::cout << "N ECal bins: " << nECalBins << endl;
+	std::cout << "N ECal bins: " << nECalBins << std::endl;
 
 	int nGEMLayers = map_GEMLayers.size();
-	std::cout << "N GEM layers: " << nGEMLayers << endl;
+	std::cout << "N GEM layers: " << nGEMLayers << std::endl;
 
 	std::map< int, GEMLayerROItoStrips > map_GEMLayerROItoStrips;
 
@@ -37,22 +38,51 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 		map_GEMLayerROItoStrips.emplace( layerNum, GEMLayerROItoStrips{gemLayerInstance} );
 	}
 
+
+
+
+
+
+
+
+
+
+
+	
 	// FINAL OUTPUT FOR Rafael to convert to GEM VTP, FIBER, and APV info.
+	
 	std::map < int /*ECalBinNo*/,
-	 std::map< int /*GEMModNumAsInDB*/,
-	  std::pair< std::set<int> /*setOfUstripsForModule*/, std::set<int> /*SetofVstripsforMOdule*/> > > map_physicalUVStrips_byECalBin_byGEMMod;
+	std::map< int /*GEMModNumAsInDB*/,
+	 std::pair< std::set<int> /*setOfUstripsForModule*/, std::set<int> /*SetofVstripsforMOdule*/> > > map_physicalUVStrips_byECalBin_byGEMMod;
+
+
+	 //RREDITS:******
+	 std::map < int /*ECalBinNo*/, std::set<apvInfoVals>> ECalBinAPVinfo;
+	 std::set<apvInfoKeys> missingKeys;
+
+
+
 
 	for ( auto& [binNum, map_ROIbyLayer_forThisBin] : map_ROIsByBinsAndLayers )
 	{
 		std::map <int, std::pair < std::set<int>, std::set<int> >> map_allUVstripsSetsForAllModules_forThisECalBin;
 
-		//std::cout << "***Filling bin: " << binNum << endl;
+		//std::cout << "***Filling bin: " << binNum << std::endl;
+		
+		
+		//RREDIT:Start
+		std::set<apvInfoVals> currECalBinAPVs;
+
+		//RREDIT:End
+
+
 
 		for ( auto& [layerNum, gemLayerROItoStripsInstance] : map_GEMLayerROItoStrips )
-		{
+		{	
+			
 			std::map <int, std::pair < std::set<int>, std::set<int> >> map_thisLayer_allROIsForAllModules_forThisECalBin = gemLayerROItoStripsInstance.takeROI_givePhysicalUVStrips( /*map_ROIbyLayer_forThisBin.at( layerNum )*/ (map_ROIsByBinsAndLayers.at(binNum).at(layerNum)) );
 			
-			//std::cout << "Layer Num: " << layerNum << "  Numer of ROI modules: " << map_thisLayer_allROIsForAllModules_forThisECalBin.size() << endl;
+			//std::cout << "Layer Num: " << layerNum << "  Numer of ROI modules: " << map_thisLayer_allROIsForAllModules_forThisECalBin.size() << std::endl;
 			
 			for (const auto& [modNum, modUVstripPair] : map_thisLayer_allROIsForAllModules_forThisECalBin) 
 			{
@@ -61,75 +91,128 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 			    {
 			    	map_allUVstripsSetsForAllModules_forThisECalBin[modNum] = modUVstripPair;
 			    } 
+
+
+				// RREDIT:Start
+				std::set<int>uStrips = modUVstripPair.first;
+				std::set<int>vStrips = modUVstripPair.second;
+
+				for (int stripID : uStrips){
+					apvInfoKeys currStripKeys;
+					currStripKeys.gemid = modNum;
+					currStripKeys.axis = 0;
+
+
+					currStripKeys.pos = stripID/128;//APV position
+					// posInAPV = stripID%128;
+
+					// std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
+					// << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
+					if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
+						std::cout << "\n\n\nFor strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
+						currStripKeys.pos << " NOT FOUND!" << std::endl;
+						missingKeys.emplace(currStripKeys);
+					}
+		
+		
+					if (apvInfoMap.find(currStripKeys) != apvInfoMap.end()) {
+						currECalBinAPVs.emplace(apvInfoMap[currStripKeys]);  // Store unique strip -> APV mapping
+					}
+
+				}
+
+				for (int stripID : vStrips){
+					apvInfoKeys currStripKeys;
+					currStripKeys.gemid = modNum;
+					currStripKeys.axis = 1;
+
+
+					currStripKeys.pos = (stripID/128);//APV position(-1 so index starts at 0)
+					// posInAPV = stripID%128;
+
+					// std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
+					// << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
+					
+					if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
+						std::cout << "\n\n\nFor strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
+						currStripKeys.pos << " NOT FOUND!" << std::endl;
+						missingKeys.emplace(currStripKeys);
+					}
+		
+		
+					if (apvInfoMap.find(currStripKeys) != apvInfoMap.end()) {
+						currECalBinAPVs.emplace(apvInfoMap[currStripKeys]);  // Store unique strip -> APV mapping
+					}
+
+				}
+				//RREDITS:End
+		
 			}
-		}
 
 		map_physicalUVStrips_byECalBin_byGEMMod[binNum] = map_allUVstripsSetsForAllModules_forThisECalBin;
 
+		}
+
+		ECalBinAPVinfo[binNum] = currECalBinAPVs;//RREDIT
 	}
 
 	std::ofstream outchanfile( "outPhysicalStrips.txt" );
 
 	for ( const auto& [binNum, uvStripSetbyModule] : map_physicalUVStrips_byECalBin_byGEMMod )
 	{
-		outchanfile << endl << "### BIN NUMBER: " << binNum << " ###" << endl;
+		outchanfile << std::endl << "### BIN NUMBER: " << binNum << " ###" << std::endl;
 
 		for ( const auto& [modNUm, uvStripPair] : uvStripSetbyModule )
 		{
-			outchanfile << endl << "*** Mod Num: " << modNUm << " ***" << endl;
+			outchanfile << std::endl << "*** Mod Num: " << modNUm << " ***" << std::endl;
 
-	 		for ( const auto& ustrip : uvStripPair.first ) outchanfile << "U strip: " << ustrip << endl;
+	 		for ( const auto& ustrip : uvStripPair.first ) outchanfile << "U strip: " << ustrip << std::endl;
 
-			for ( const auto& vstrip : uvStripPair.second ) outchanfile << "V strip: " << vstrip << endl;
+			for ( const auto& vstrip : uvStripPair.second ) outchanfile << "V strip: " << vstrip << std::endl;
 		}
 	}
 
 	outchanfile.close();
-
 	
-	////
-	// std::map<int, GEMModule> layer_gem_map = (map_GEMLayers.at(2)).gemModulesLayer;
+	
 
-	// std::cout << "NGEM modules: " << layer_gem_map.size() << endl;
+	//RREDIT:START
 
-	// GEMLayerROItoStrips gemLayer { map_GEMLayers.at(7) }; //*
 
-	// // GEMModROItoStrips gemToStrips { layer_gem_map.at(2)  }; //((map_GEMLayersAndModules[2]).gemModulesLayer)[0]
+	std::ofstream APVmapfile( "EcalBinToAPVmap.txt");
 
-	// // if ( gemToStrips.isROIWithinModule( (map_ROIsByBinsAndLayers.at(110).at(2)) ) ) std::cout << "ROI is within layer" << endl;
-	// // else std::cout << "ROI is outside layer" << endl;
+	APVmapfile << "# Lists APV information corresponding to each ECal Bin\n";
+    APVmapfile << "# Format: ECal Bin | VTP Crate | Fiber (MPD ID) | ADC Channel\n\n";
 
-	// // std::pair < std::set<int>, std::set<int> > stripSetMap = gemToStrips.calcAndReturn_UandVstripSetPair_forROI( (map_ROIsByBinsAndLayers.at(110).at(2)) );
+	for ( auto &[binNum, APVinfo] : ECalBinAPVinfo){
+		APVmapfile << std::endl << "### ECal BIN NUMBER: " << binNum << " ###" << std::endl;
 
-	// // std::cout << "N U strips: " << stripSetMap.first.size() << endl;
-	// // std::cout << "N V strips: " << stripSetMap.second.size() << endl;
+		int colWidth = 12;
 
-	// std::map <int, std::pair < std::set<int>, std::set<int> >> stripSetMap = gemLayer.takeROI_givePhysicalUVStrips( (map_ROIsByBinsAndLayers.at(6).at(7)) ); //*
+    	APVmapfile << std::left 
+		<< std::setw(colWidth) << "ECalBin"
+		<< std::setw(colWidth) << "VTP Crate"
+		<< std::setw(colWidth) << "Fiber"
+		<< std::setw(colWidth) << "ADC Ch"
+		<< "\n";
 
-	// std::map <int, std::pair < std::set<int>, std::set<int> >> stripSetMap2 = gemLayer.takeROI_givePhysicalUVStrips( (map_ROIsByBinsAndLayers.at(5).at(7)) );
+    	APVmapfile << std::string(7 * colWidth, '-') << "\n";
 
-	// // for ( const auto& ustrip : stripSetMap.at(2).first )
-	// // {
-	// // 	std::cout << "U strip: " << ustrip << endl;
-	// // }
+		for (auto &APV:APVinfo){
+			APVmapfile << std::left 
+			<< std::setw(colWidth) << binNum
+			<< std::setw(colWidth) << APV.vtpcrate
+			<< std::setw(colWidth) << APV.fiber
+			<< std::setw(colWidth) << APV.adc_ch
+			<< "\n";
+		}
+	}
 
-	// // for ( const auto& vstrip : stripSetMap.at(2).second )
-	// // {
-	// // 	std::cout << "V strip: " << vstrip << endl;
-	// // }
+	APVmapfile.close();
+	//RREDITS:End
 
-	// std::cout << "Number of mods in ROI bin 6: " << stripSetMap.size() << endl; //*
-	// std::cout << "Number of mods in ROI bin 5: " << stripSetMap2.size() << endl; //*
-	// for ( const auto& [modnum, pair] : stripSetMap )
-	// {
-	// 	std::cout << endl << "*** Mod Num: " << modnum << " ***" << endl;
-
-	// 	for ( const auto& ustrip : pair.first ) std::cout << "U strip: " << ustrip << endl;
-
-	// 	for ( const auto& vstrip : pair.second ) std::cout << "V strip: " << vstrip << endl;
-	// }
-
-	////
+	std::cout<< "\n\n\n!!!!!!!!!! missing keys!!!!!!!!!!\n" << std::endl;
+	for (auto &key: missingKeys){ key.print();}
 
 	
 
