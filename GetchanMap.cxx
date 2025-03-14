@@ -151,7 +151,7 @@ void MakechanMap(const char* refFile) {
           std::stringstream dataStream(currLine);
           dataStream >> currAPVvals.vtpcrate >> dumpStr >> currAPVvals.fiber >> dumpStr
                      >> currAPVvals.adc_ch >> dumpStr >> currAPVkeys.pos 
-                     >> currAPVvals.invert
+                    //  >> currAPVvals.invert
                      >> currAPVkeys.axis;
 
           
@@ -178,7 +178,7 @@ void printAPVinfoMap() {
       std::cout << "GEMId: " << key.gemid << ", Axis: " << key.axis
                 << ", Pos: " << key.pos << std::endl;
       std::cout << "VTPcrate: " << val.vtpcrate << ", Fiber: " << val.fiber
-                << ", invert: " << val.invert
+                // << ", invert: " << val.invert
                 << ", ADC_ch: " << val.adc_ch << std::endl;
       std::cout << "------------------------------------\n";
   }
@@ -187,13 +187,13 @@ void printAPVinfoMap() {
 
 // Function to write `apvInfoMap` to a file
 void OutputAPVinfoMap() {
-  std::ofstream mapFile("APV_Map_TEST.txt");
+  std::ofstream mapFile("chanMapAPVinfo.txt");
   if (!mapFile.is_open()) {
       std::cerr << "Error: Could not create file APV_Map_TEST.txt\n";
       return;
   }
 
-  mapFile << "#apvInfoMap actually maps key and value structs to eachother\n" ;
+  mapFile << "#apvInfoMap, the struct used to obtain the VTP defining values in many scrips actually maps key and value structs to eachother\n" ;
   mapFile << "## the apvInfoKeys consists of: module id, axis(U/V depending on map), and  pos(along axis)\n";
   mapFile << "## the apvInfoVals consists of: VTPcrate, Fiber(MPD) ID, and  the ADC channel\n\n";
 
@@ -220,19 +220,23 @@ void OutputAPVinfoMap() {
               << "\n";
   }
 
-  std::cout << "Parsed data written to APV_Map_TEST.txt\n";
+  std::cout << "Parsed data written to chanMapAPVinfo.txt\n";
 }
 
-void TestAPVInfoMap(const char* refFile){
+void TestAPVInfoMap(const char* refFile = "db_sbs.gemFT_TEST.txt"){
   // APVFinder *anAPVFinder = new APVFinder();
   MakechanMap(refFile);
   printAPVinfoMap();
   OutputAPVinfoMap();
 }
 
-std::map<apvInfoKeys, apvInfoVals> GetchanMap(const char* refFile){
+std::map<apvInfoKeys, apvInfoVals> GetchanMap(const char* refFile = "db_sbs.gemFT_TEST.txt"){
   // MakechanMap("db_sbs.gemFT_TEST.txt");
   MakechanMap(refFile);
+
+  OutputAPVinfoMap();
+
+  // TestAPVInfoMap();
   
   return apvInfoMap;
 }
