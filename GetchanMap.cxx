@@ -112,7 +112,6 @@ int SetInvert(int invert){
 
 
 
-//Takes in txt files
 void MakechanMap(const char* refFile) {
   std::ifstream aRefFile(refFile);
   if (!aRefFile.is_open()) {
@@ -151,23 +150,19 @@ void MakechanMap(const char* refFile) {
           std::stringstream dataStream(currLine);
           dataStream >> currAPVvals.vtpcrate >> dumpStr >> currAPVvals.fiber >> dumpStr
                      >> currAPVvals.adc_ch >> dumpStr >> currAPVkeys.pos 
-                    //  >> currAPVvals.invert
+                     >> currAPVvals.invert
                      >> currAPVkeys.axis;
 
+          // Ensure invert is set correctly
+          currAPVvals.invert = (currAPVvals.invert == 0) ? 1 : -1;
           
-          
-          
-                    //  currAPVvals.invert = SetInvert(currAPVvals.invert);
-
-
-
-                     
+          // Store mapping
           apvInfoMap[currAPVkeys] = currAPVvals;
       } else {
           currentM = -1;  // Reset if empty line encountered
       }
   }
-
+  
   std::cout << "Finished filling apvInfoMap with " << apvInfoMap.size() << " entries.\n";
 }
 
@@ -223,14 +218,14 @@ void OutputAPVinfoMap() {
   std::cout << "Parsed data written to chanMapAPVinfo.txt\n";
 }
 
-void TestAPVInfoMap(const char* refFile = "db_sbs.gemFT_TEST.txt"){
+void TestAPVInfoMap(const char* refFile = "db_sbs.gemFT.dat"){
   // APVFinder *anAPVFinder = new APVFinder();
   MakechanMap(refFile);
   printAPVinfoMap();
   OutputAPVinfoMap();
 }
 
-std::map<apvInfoKeys, apvInfoVals> GetchanMap(const char* refFile = "db_sbs.gemFT_TEST.txt"){
+std::map<apvInfoKeys, apvInfoVals> GetchanMap(const char* refFile = "db_sbs.gemFT.dat"){
   // MakechanMap("db_sbs.gemFT_TEST.txt");
   MakechanMap(refFile);
 
