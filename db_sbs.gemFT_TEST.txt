@@ -15,6 +15,8 @@
 ## vtpcrate  slot  fiber  gemid  adc_ch   i2c   pos     invert   axis                              ##
 ########################################################################################################
 
+
+
 #Front Layer (L0 - m0): UVAXW L0 (vtp4)
 ## vtpcrate  slot    fiber   gemid    adc_ch   i2c     pos   invert   axis  
 sbs.gemFT.m0.chanmap = 

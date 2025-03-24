@@ -1,4 +1,4 @@
-#include "DBread.h"
+// #include "DBread.h"
 
 // #include "TVector2.h"
 // #include "TMath.h"
@@ -82,19 +82,22 @@ std::map<int, std::pair<std::map<int, apvInfoVals>, std::map<int, apvInfoVals>>>
 
             std::cout << "Checking modID: " << mod << " Strip: " << stripID 
           << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
-if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
-    std::cout << "  --> APV key NOT FOUND!" << std::endl;
-}
+            if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
+                std::cout << "  --> APV key NOT FOUND!" << std::endl;
+            }
 
 
             if (apvInfoMap.find(currStripKeys) != apvInfoMap.end()) {
                 uStripInfo[stripID] = apvInfoMap[currStripKeys];  // Store unique strip -> APV mapping
             }
-            std::cout<< "modID: " << mod << " UStrip: " << stripID << " | "
+            std::cout<< "modID: " << mod << " UStrip: " << stripID 
+            << " expected pos: " << stripID/128
+            << " | "
             << "VTP Crate: " << uStripInfo[stripID].vtpcrate
             << " Fiber: " << uStripInfo[stripID].fiber
             << " ADC Ch: " <<uStripInfo[stripID].adc_ch
-            << " Invert: " << uStripInfo[stripID].invert << std::endl;
+            // << " Invert: " << uStripInfo[stripID].invert 
+            << std::endl;
         }
        
         for (int stripID : vStrips){
@@ -111,19 +114,22 @@ if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
 
             std::cout << "Checking modID: " << mod << " Strip: " << stripID 
           << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
-if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
-    std::cout << "  --> APV key NOT FOUND!" << std::endl;
-}
+            if (apvInfoMap.find(currStripKeys) == apvInfoMap.end()) {
+                std::cout << "  --> APV key NOT FOUND!" << std::endl;
+            }
 
 
             if (apvInfoMap.find(currStripKeys) != apvInfoMap.end()) {
                 vStripInfo[stripID] = apvInfoMap[currStripKeys];  // Store unique strip -> APV mapping
 
-                std::cout<< "modID: " << mod << " VStrip: " << stripID << " | "
+                std::cout<< "modID: " << mod << " VStrip: " << stripID 
+                << " expected pos: " << stripID/128
+                << " | "
                 << "VTP Crate: " << vStripInfo[stripID].vtpcrate
                 << " Fiber: " << vStripInfo[stripID].fiber
                 << " ADC Ch: " <<vStripInfo[stripID].adc_ch
-                << " Invert: " << vStripInfo[stripID].invert << std::endl;
+                // << " Invert: " << vStripInfo[stripID].invert 
+                << std::endl;
             }
         }
 
@@ -143,7 +149,8 @@ void OutputstripToAPVmap(const std::map<int, std::pair<std::map<int, apvInfoVals
 
     // Print a descriptive header
     mapFile << "# Mapping of GEM strip numbers to APV electronics\n";
-    mapFile << "# Format: Module | Axis (0=U, 1=V) | Strip | VTP Crate | Fiber (MPD ID) | ADC Channel | Invert\n\n";
+    mapFile << "# Format: Module | Axis (0=U, 1=V) | Strip | VTP Crate | Fiber (MPD ID) | ADC Channel\n\n"; 
+    // | Invert\n\n";
 
     // Set column widths for better formatting
     int colWidth = 12;
@@ -152,10 +159,11 @@ void OutputstripToAPVmap(const std::map<int, std::pair<std::map<int, apvInfoVals
             << std::setw(colWidth) << "Module"
             << std::setw(colWidth) << "Axis"
             << std::setw(colWidth) << "Strip"
+            << std::setw(colWidth) << "pos?"
             << std::setw(colWidth) << "VTP Crate"
             << std::setw(colWidth) << "Fiber"
             << std::setw(colWidth) << "ADC Ch"
-            << std::setw(colWidth) << "Invert"
+            // << std::setw(colWidth) << "Invert"
             << "\n";
 
     mapFile << std::string(7 * colWidth, '-') << "\n"; // Line separator
@@ -171,10 +179,11 @@ void OutputstripToAPVmap(const std::map<int, std::pair<std::map<int, apvInfoVals
                     << std::setw(colWidth) << modID
                     << std::setw(colWidth) << "0"  // Axis 0 = U
                     << std::setw(colWidth) << strip
+                    << std::setw(colWidth) << strip/128
                     << std::setw(colWidth) << apvInfo.vtpcrate
                     << std::setw(colWidth) << apvInfo.fiber
                     << std::setw(colWidth) << apvInfo.adc_ch
-                    << std::setw(colWidth) << apvInfo.invert
+                    // << std::setw(colWidth) << apvInfo.invert
                     << "\n";
         }
 
@@ -184,10 +193,11 @@ void OutputstripToAPVmap(const std::map<int, std::pair<std::map<int, apvInfoVals
                     << std::setw(colWidth) << modID
                     << std::setw(colWidth) << "1"  // Axis 1 = V
                     << std::setw(colWidth) << strip
+                    << std::setw(colWidth) << strip/128
                     << std::setw(colWidth) << apvInfo.vtpcrate
                     << std::setw(colWidth) << apvInfo.fiber
                     << std::setw(colWidth) << apvInfo.adc_ch
-                    << std::setw(colWidth) << apvInfo.invert
+                    // << std::setw(colWidth) << apvInfo.invert
                     << "\n";
         }
     }
