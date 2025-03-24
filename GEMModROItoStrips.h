@@ -1,5 +1,8 @@
 #include "DBread.h"
 
+
+#include "ROIread.h"
+
 #ifndef GEMMODROITOSTRIPS_H
 #define GEMMODROITOSTRIPS_H
 
@@ -160,6 +163,10 @@ private:
 	std::map< int, GEMModROItoStrips > m_GEMModulesROItoStripsMapLayer;
 
 	std::map< int, std::pair< std::set<int>, std::set<int> > > m_LayerModule_UVstripPairs;
+
+public: //helper funcs
+
+std::map< int, std::pair< std::set<int>, std::set<int> > > GetUVpairs(){ return m_LayerModule_UVstripPairs;}
 
 public:
 
