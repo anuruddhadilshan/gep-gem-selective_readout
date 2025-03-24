@@ -31,23 +31,23 @@ public:
 	ROIread( const std::string& roi_file )
 	: m_roi_filename{roi_file}, m_roi_file{roi_file}
 	{
-		std::cout << endl;
-		std::cout << "*** Reading and copying ROIs for each GEM layers, for each ECal bin, from file: " << m_roi_filename << " ***" << endl;
+		std::cout <<std::endl;
+		std::cout << "*** Reading and copying ROIs for each GEM layers, for each ECal bin, from file: " << m_roi_filename << " ***" <<std::endl;
 		
 		if ( readROIfile() == -1 ) 
 		{
 			m_roifile_readstatus = -1;
 
-			std::cerr << "ROI file not read properly. STOP and debug!!!" << endl;
+			std::cerr << "ROI file not read properly. STOP and debug!!!" <<std::endl;
 		}
 		else
 		{
 			m_roifile_readstatus = 0;
 
-			std::cout << "*** Finished reading the ROI file ***" << endl;
+			std::cout << "*** Finished reading the ROI file ***" <<std::endl;
 		}
 
-		std::cout << endl;
+		std::cout <<std::endl;
 		
 	}
 
@@ -55,7 +55,7 @@ public:
 	{
 		if ( !m_roi_file.is_open() ) 
 		{
-			std::cerr << "ERROR: Could not open the ROI file " << m_roi_filename << endl;
+			std::cerr << "ERROR: Could not open the ROI file " << m_roi_filename <<std::endl;
 
 			return -1;
 		}
@@ -95,13 +95,13 @@ public:
 
 		}
 
-		std::cout << "Bin Layer xMin xMax yMin yMax" << endl;
+		std::cout << "Bin Layer xMin xMax yMin yMax" <<std::endl;
 
 		for ( const auto& [binNum, layer_roi] : m_roi )
 		{
 			for ( const auto& [layerNum, roi] : layer_roi )
 			{
-				std::cout << binNum << " " << layerNum << " " << roi.xMin << " " << roi.xMax << " " << roi.yMin << " " << roi.yMax << endl;
+				std::cout << binNum << " " << layerNum << " " << roi.xMin << " " << roi.xMax << " " << roi.yMin << " " << roi.yMax <<std::endl;
 			}
 		}
 
