@@ -214,7 +214,7 @@ public:
 
 		else
 		{
-			std::cerr << "ERROR, GEMLayerROItoStrips - INVALID NUMBER OF MODULES IN THE GEM LAYER" << endl;
+			std::cerr << "ERROR, GEMLayerROItoStrips - INVALID NUMBER OF MODULES IN THE GEM LAYER" << std::endl;
 
 			return m_LayerModule_UVstripPairs;
 		}

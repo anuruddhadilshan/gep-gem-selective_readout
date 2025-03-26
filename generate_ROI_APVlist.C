@@ -212,8 +212,8 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 	APVmapfile.close();
 	//RREDITS:End
 
-	std::cout<< "\n\n\n!!!!!!!!!! missing keys!!!!!!!!!!\n" << std::endl;
-	for (auto &key: missingKeys){ key.print();}
+	// std::cout<< "\n\n\n!!!!!!!!!! missing keys!!!!!!!!!!\n" << std::endl;
+	// for (auto &key: missingKeys){ key.print();}
 
 	
 

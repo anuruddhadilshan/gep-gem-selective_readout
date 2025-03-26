@@ -149,12 +149,14 @@ int GetMod_apvmap(int modID){
 
 
   
-  std::array<double, 3> GetModDimensions(int apvmap){
-    if (apvmap==2){
+  // std::array<double, 3> GetModDimensions(int apvmap){
+  std::array<double, 3> GetModDimensions(int modID){
+    if (modID<6){
       //in meters
       return std::array<double, 3> {1.5, .4, .001};
     }
-    if (apvmap==1){
+
+    else if (modID>=6){
       return std::array<double, 3> {.512, .6144, .001};
     }
   }
@@ -309,6 +311,7 @@ std::map<int, gemInfo> GetGemInfoMap(){
 
     // TestGEMInfoMap();
     fillGEMInfoMap();
+    OutputGEMinfoMap();
     return gemInfoMap;
 }
 

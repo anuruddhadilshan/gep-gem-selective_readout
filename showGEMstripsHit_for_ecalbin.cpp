@@ -194,8 +194,17 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 		std::cout << "layerSizeX = " << layerSizeX << std::endl;
 
 		
-		xMin = -modSize[1]/2.; xMax = modSize[1]/2.;
-		yMin = -layerSizeX/2.; yMax = layerSizeX/2. ;// first size Dim so it plots the x vals down corresponding to mod coords 
+		// xMin = -modSize[1]/2.; xMax = modSize[1]/2.;
+		// yMin = -layerSizeX/2.; yMax = layerSizeX/2. ;// first size Dim so it plots the x vals down corresponding to mod coords 
+
+		double mod_size_x = modSize[0]; // actual horizontal extent
+		double mod_size_y = modSize[1]; // actual vertical extent
+
+		xMin = -mod_size_x / 2.;
+		xMax = +mod_size_x / 2.;
+		yMin = -mod_size_y / 2.;
+		yMax = +mod_size_y / 2.;
+
 		
 		std::cout << "\nxMin, yMin: " << xMin << ", " << yMin 
 		<< "\nxMax, yMax: " << xMax << ", " << yMax << std::endl;
