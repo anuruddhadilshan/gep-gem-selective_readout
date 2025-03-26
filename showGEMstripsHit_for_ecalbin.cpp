@@ -115,6 +115,11 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 
 	std::cout << "\n\nCalling showgemstrips_for_ecalbin()" <<std::endl;
 
+	std::cout <<"number of keys = "<< StripsPerMod.size() << std::endl;
+
+	std::cout << "Keys include: "<<std::endl;
+	for (auto& [key, val] : StripsPerMod){ std::cout << key << ", "<<std::endl;}
+
 	static int canvas_id = 0;
 	TCanvas* C = new TCanvas(Form("canvas_%d", canvas_id++), "Active ROI Strips in GEM Planes", 1600, 1000);
 	C->Divide(4, 2);
@@ -125,8 +130,8 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 
 	for (int layer = 0; layer < 8; layer++) {
 
-		TPad* pad = (TPad*) C->cd(layer + 1);  // layer+1 because ROOT pads are 1-indexed
-		pad->SetName(Form("Layer_%d", layer));  // Properly sets a name for the pad
+		// TPad* pad = (TPad*) C->cd(layer + 1);  // layer+1 because ROOT pads are 1-indexed
+		// pad->SetName(Form("Layer_%d", layer));  // Properly sets a name for the pad
 		C->cd(layer + 1);
 
 		TH2I* dummy = new TH2I(
@@ -137,10 +142,10 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 		dummy->SetStats(0);
 		dummy->Draw();
 
-		TLatex* latex = new TLatex();
-		latex->SetNDC(); // normalized coordinates (0–1)
-		latex->SetTextSize(0.05);
-		latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
+		// TLatex* latex = new TLatex();
+		// latex->SetNDC(); // normalized coordinates (0–1)
+		// latex->SetTextSize(0.05);
+		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
 
 	}
 
@@ -174,7 +179,16 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 
 
 		auto it = StripsPerMod.find(mod);
-		if (it == StripsPerMod.end()) continue;
+		
+		if (it == StripsPerMod.end()) {
+			// std::cout << " --> Skipping mod " << mod << ", not in StripsPerMod\n";
+			continue;
+		}
+
+		if (it->second.first.empty() && it->second.second.empty()) {
+			// std::cout << " --> Skipping mod " << mod << ", no active U or V strips\n";
+			continue;
+		}
 
 		// double mod_x = 0.0;
 		// double mod_y = 0.0;
@@ -204,7 +218,7 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 			// vDrawn+=1;
 
 
-		std::cout<< "\nActive Ustrips = " << uDrawn << " Active Ustrips = " << vDrawn << std::endl;
+		std::cout<< "\nActive Ustrips = " << uDrawn << " Active Vstrips = " << vDrawn << std::endl;
 
 		uDrawn=0; vDrawn=0;
 
@@ -215,7 +229,138 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
 	}
 
-	std::cout<< "\nActive Ustrips = " << uDrawn << " Active Ustrips = " << vDrawn << std::endl;
+	// std::cout<< "\nActive Ustrips = " << uDrawn << " Active Ustrips = " << vDrawn << std::endl;
+
+	C->Update();
+
+}
+
+
+
+void LAYERshowgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerLayer)
+// void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
+{
+
+	std::cout << "\n\nCalling LAYERshowgemstrips_for_ecalbin()" <<std::endl;
+
+	std::cout <<"number of keys = "<< StripsPerLayer.size() << std::endl;
+	std::cout << "Keys include: "<<std::endl;
+	for (auto& [key, val] : StripsPerLayer){ std::cout << key << ", "<<std::endl;}
+
+
+	static int canvas_id = 0;
+	TCanvas* C = new TCanvas(Form("canvas_%d", canvas_id++), "Active ROI Strips in GEM Planes", 1600, 1000);
+	C->Divide(4, 2);
+
+
+	// int uDrawn=0, vDrawn=0;
+	
+
+	for (int layer = 0; layer < 8; layer++) {
+
+		TPad* pad = (TPad*) C->cd(layer + 1);  // layer+1 because ROOT pads are 1-indexed
+		pad->SetName(Form("Layer_%d", layer));  // Properly sets a name for the pad
+		C->cd(layer + 1);
+
+		TH2I* dummy = new TH2I(
+			Form("dummy_layer%d_%d", layer, canvas_id),
+			Form("Layer %d;X (m);Y (m)", layer),
+			100, -0.5, 0.5, 100, -1.0, 1.0
+		);
+		dummy->SetStats(0);
+		dummy->Draw();
+
+		TLatex* latex = new TLatex();
+		latex->SetNDC(); // normalized coordinates (0–1)
+		latex->SetTextSize(0.05);
+		latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
+
+	}
+
+	// for (int mod = 0; mod < gemInfoMap.size(); mod++) {
+	for (int layer = 0; layer < 8; layer++) {
+
+		// std::cout<< "\nmod " << mod << "\n-------------------------------------";
+		std::cout<< "\nlayer " << layer << "\n-------------------------------------";
+
+		// TPad* pad = (TPad*) C->cd(mod + 1);  // layer+1 because ROOT pads are 1-indexed
+		// pad->SetName(Form("Layer_%d", mod));  // Properly sets a name for the pad
+		// C->cd(mod + 1);
+
+		// TH2I* dummy = new TH2I(
+		// 	Form("dummy_mod%d_%d", mod, canvas_id),
+		// 	Form("Mod %d;X (m);Y (m)", mod),
+		// 	100, -0.5, 0.5, 100, -1.0, 1.0
+		// );
+		// dummy->SetStats(0);
+		// dummy->Draw();
+
+
+		int mod = -1;
+		// if (mod <= 5) layer = mod;
+		if (layer==6) mod = 6;
+		else if (layer==7) mod = 10;
+		else if (layer>0&&layer<6) mod=layer;
+		if (layer < 0) continue;
+
+
+		// TPad* pad = (TPad*) C->cd(layer + 1);
+		TPad* pad = (TPad*) C->cd(layer);
+		pad->cd();  
+
+
+
+		auto it = StripsPerLayer.find(layer);
+		if (it == StripsPerLayer.end()) {
+			std::cout << " --> Skipping layer " << layer << ", not in StripsPerLayer\n";
+			continue;
+		}
+
+		if (it->second.first.empty() && it->second.second.empty()) {
+			std::cout << " --> Skipping layer " << layer << ", no active U or V strips\n";
+			continue;
+		}
+
+		// double mod_x = 0.0;
+		// double mod_y = 0.0;
+
+		auto thisModInfo = gemInfoMap[mod];
+		
+		double mod_x = thisModInfo.position[0];		
+		
+		double mod_y = thisModInfo.position[1];		
+
+
+		
+		double u_angle = thisModInfo.uvangles[0];
+		double v_angle = thisModInfo.uvangles[1];
+		double pitch = 0.004;
+		int n_u = thisModInfo.nstripsuv[0];
+		int n_v = thisModInfo.nstripsuv[1];
+
+
+
+		for (int u : it->second.first)
+			drawGEMStrip(mod_x, mod_y, "U", u_angle, u, pitch, n_u);
+			// uDrawn+=1;
+
+		for (int v : it->second.second)
+			drawGEMStrip(mod_x, mod_y, "V", v_angle, v, pitch, n_v);
+			// vDrawn+=1;
+
+
+		std::cout<< "\nActive Ustrips = " << uDrawn << " Active Vstrips = " << vDrawn << std::endl;
+
+		uDrawn=0; vDrawn=0;
+
+
+		// TLatex* latex = new TLatex();
+		// latex->SetNDC(); // normalized coordinates (0–1)
+		// latex->SetTextSize(0.05);
+		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
+	}
+
+	// std::cout<< "\nActive Ustrips = " << uDrawn << " Active Ustrips = " << vDrawn << std::endl;
 
 	C->Update();
 
