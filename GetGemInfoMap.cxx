@@ -171,7 +171,7 @@ int GetMod_apvmap(int modID){
   std::array<double, 2> GetUVang(int modID){
     if(modID ==0){ return std::array<double, 2>{180., 135.};}
     else if(modID ==1){ return std::array<double, 2>{180., -135.};}
-    else if (modID >=2 && modID < 5){return std::array<double, 2>{150., -150.};}
+    else if (modID >=2 && modID <= 5){return std::array<double, 2>{150., -150.};}
     else if (modID >=6 && modID < 14){return std::array<double, 2>{0., -90.};}
   }
   
