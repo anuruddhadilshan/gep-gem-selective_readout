@@ -14,6 +14,8 @@
 #include <string>
 #include <iostream>
 
+#include <fstream>
+
 #include "GEMModROItoStrips.h"
 #include "DBread.h"
 #include "ROIread.h"
@@ -25,6 +27,9 @@
 // namespace GEMstripsHit_for_ecalbin{
 
 std::map<int, gemInfo> refModMap = GetGemInfoMap();
+
+int global_canvas_id = 0;
+
 
 // // ---- Geometry settings ----
 // std::map<int, double> u_angles = {
@@ -57,6 +62,7 @@ int uDrawn=0, vDrawn=0;
 
 void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
 {
+	if(strip_num%10==0){//Testing with greater	plotted spacing for visibility
 	auto& modInfo = refModMap[modNum];
 
 	double mod_x = modInfo.position[0];
@@ -165,27 +171,28 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
 	
 
 
-	// if (modNum < 3){//5-7 are kinda fine focus on way off first
+	if (modNum < 3){//5-7 are kinda fine focus on way off first
 
-	// 	std::cout << "\n------------\nMod Num " << modNum << std::endl;
-	// 	std::cout << "axis: " << axis << std::endl;
-	// 	std::cout << "angle: " << angle*TMath::RadToDeg() << std::endl;
+		std::cout << "\n------------\nMod Num " << modNum << std::endl;
+		std::cout << "axis: " << axis << std::endl;
+		std::cout << "angle: " << angle*TMath::RadToDeg() << std::endl;
 
-	// 	std::cout << "\nnumber of strips in mod " << n_strips << std::endl;
-	// 	std::cout << "Center strip: " << center_strip << std::endl;
-	// 	std::cout << "This strip number " << strip_num << std::endl;
-	// 	std::cout << " Strip offset: " << strip_num-center_strip << std::endl;
+		std::cout << "\nnumber of strips in mod " << n_strips << std::endl;
+		std::cout << "Center strip: " << center_strip << std::endl;
+		std::cout << "This strip number " << strip_num << std::endl;
+		std::cout << " Strip offset: " << strip_num-center_strip << std::endl;
 
-	// 	std::cout << "\noffset: " << offset << std::endl;
-	// 	std::cout << "dx offset: " << dx_offset << std::endl;
-	// 	std::cout << "dy offset: " << dy_offset << std::endl;
-	// 	std::cout << "offset * dx_offset: " << offset * dx_offset << std::endl;
-	// 	std::cout << "offset * dy_offset: " << offset * dy_offset << std::endl;
+		std::cout << "\noffset: " << offset << std::endl;
+		std::cout << "dx offset: " << dx_offset << std::endl;
+		std::cout << "dy offset: " << dy_offset << std::endl;
+		std::cout << "offset * dx_offset: " << offset * dx_offset << std::endl;
+		std::cout << "offset * dy_offset: " << offset * dy_offset << std::endl;
 	
-	// 	std::cout << "\nmod Pos size(modCoords) x y: " << mod_x << " " << mod_y<<std::endl;
-	// 	std::cout << "layer size(modCoords) x y: " << layerSizeX << " " << mod_size_y<<std::endl;
+		std::cout << "\nmod Pos size(modCoords) x y: " << mod_x << " " << mod_y<<std::endl;
+		std::cout << "layer size(modCoords) x y: " << layerSizeX << " " << mod_size_y<<std::endl;
 	
-	// 	std::cout << "\nxCenter yCenter: " << x_center << " " << y_center <<std::endl;
+		std::cout << "\nxCenter yCenter: " << x_center << " " << y_center <<std::endl;
+	};
 
 
 
@@ -308,27 +315,30 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
 	TLine* stripLine = new TLine(y1, x1, y2, x2); //Drawn 
 	if (axis == 0) { // U
 		stripLine->SetLineColor(kCyan);
-		stripLine->SetLineStyle(2);
+		// stripLine->SetLineStyle(2);
 		// stripLine->SetLineStyle(9);
 		stripLine->SetLineWidth(1);
+		// stripLine->SetLineWidth(.3);
 		uDrawn++;
 	} else {         // V
 		stripLine->SetLineColor(kPink);
-		stripLine->SetLineStyle(2);
+		// stripLine->SetLineStyle(2);
 		// stripLine->SetLineStyle(9);
 		stripLine->SetLineWidth(1);
+		// stripLine->SetLineWidth(.3);
 		vDrawn++;
 	}
 	stripLine->Draw("same");
 }
-
+}
 
 
 
 // ---- GEM Strip ROI Visualization ----
 // void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerLayer)
 // void showgemstrips_for_ecalbin(std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerLayer)
-void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
+// void showgemstrips_for_ecalbin(int ecalBinNum, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
+TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
 {
 
 	std::cout << "\n\nStarting showgemstrips_for_ecalbin()" <<std::endl;
@@ -345,12 +355,21 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 
 	// static int canvas_id = 0;
 	int canvas_id = 0;
-	TCanvas* C = new TCanvas(Form("canvas_%d", canvas_id++), "Active ROI Strips in GEM Planes", 1600, 1000);
+	// TCanvas* C = new TCanvas(Form("canvas_%d", canvas_id++), "Active ROI Strips in GEM Planes", 1600, 1000);
+	TCanvas* C = new TCanvas(Form("canvas_%d", global_canvas_id++), "Active ROI Strips in GEM Planes", 1600, 1000);
+
 	
 	
 	C->SetTitle("Bin ");
 
 	C->Divide(4, 2);
+
+	// Draw ECal Bin number at the top of the canvas
+TLatex latex;
+latex.SetNDC(); // Use normalized device coordinates
+latex.SetTextSize(0.04);
+latex.SetTextAlign(22); // Center alignment
+latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 
 
 	// int uDrawn=0, vDrawn=0;
@@ -564,6 +583,12 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
 	}
 
+	for (auto& [mod, uvStripPair] : StripsPerMod) {
+		std::cout << "Module " << mod 
+				  << ": U strips = " << uvStripPair.first.size() 
+				  << ", V strips = " << uvStripPair.second.size() << std::endl;
+	}
+
 	// std::cout<< "\nActive Ustrips = " << uDrawn << " Active Ustrips = " << vDrawn << std::endl;
 
 	// C->SetBit(kMustCleanup); // ROOT will clean safely
@@ -571,13 +596,14 @@ void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std:
 	// gSystem->ProcessEvents();
 	// std::cout << "Press enter to exit...\n";
 	// std::cin.get();
-
-
-
+	return C;
 }
 
 
-// }
+int exportPDF(TCanvas * C){
+	C->SaveAs("GEM_ECalBin.pdf");
+	return 0;
+}
 
 
 //Main func
@@ -652,66 +678,107 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 
 		}
 	}
-
+	
+	
 	std::string usrinput;
-	std::cout << "Enter ECal bin number to visualize (Enter for all bins, or 'q' to quit): ";
+	std::cout << "Enter ECal bin numbers to visualize separated by spaces (or 'q' to quit): ";
 	std::getline(std::cin, usrinput);
 
-	if (usrinput == "q") {
+	// Quit option
+	if (usrinput == "q" || usrinput == "Q") {
 		std::cout << "Quitting visualization.\n";
-
-		for (auto[mod, gemInfo]: refModMap)
-		{std::cout << "\nModule " << mod 
-			<< " at position (" 
-			<< gemInfo.position[0] << ", " 
-			<< gemInfo.position[1] << ", "
-			<< gemInfo.position[2] << ")"
-			<< " with size (" 
-			<< gemInfo.size[0] << ", " 
-			<< gemInfo.size[1] << ", "
-			<< gemInfo.size[2] << ")" 
-			<<" with U angle "
-			<< gemInfo.uvangles[0]
-			<< " and V angle "
-			<< gemInfo.uvangles[1]
-			<< std::endl;
-		}
 		return 0;
 	}
 
-	bool single_bin_mode = false;
-	int chosen_bin = -1;
-	if (!usrinput.empty()) {
-		try {
-			chosen_bin = std::stoi(usrinput);
-			single_bin_mode = true;
-		} catch (const std::invalid_argument&) {
-			std::cerr << "Invalid input. Please enter a valid number or leave blank.\n";
+	// Prepare list of selected bins
+	std::vector<int> selected_bins;
+
+	// If user input is empty, we will process ALL bins
+	bool all_bins_mode = usrinput.empty();
+
+	if (!all_bins_mode) {
+		std::istringstream iss(usrinput);
+		int bin;
+		while (iss >> bin) {
+			selected_bins.push_back(bin);
+		}
+		if (selected_bins.empty()) {
+			std::cerr << "Invalid input. No valid bin numbers detected.\n";
 			return -1;
 		}
 	}
 
+	
+	// // --- NEW CLEAN INPUT: Ask about PDF saving ---
+	// bool save_as_pdf = false;
+	// std::string usr_save_as_pdf;
+	// std::cout << "Save as PDF and quit? (y/n): ";
+	// std::getline(std::cin, usr_save_as_pdf);
+	// if (usr_save_as_pdf == "y" || usr_save_as_pdf == "Y") {
+	// 	save_as_pdf = true;
+	// }
+	
+	
+	// bool interactive_view = false;
+	// std::string usr_interactive_view;
+	// std::cout << "Visualize with ROOT interactive window? (y/n): ";
+	// std::getline(std::cin, usr_interactive_view);
+	// if (usr_interactive_view == "y" || usr_interactive_view == "Y") {
+	// 	interactive_view = true;
+	// }
 
 
-	std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMMod.size()<<std::endl;
 
-	for ( const auto& [binNum, uvStripSetbyModule] : map_physicalUVStrips_byECalBin_byGEMMod )
-	{
-		std::cout << "\n### BIN NUMBER: " << binNum << " ###" << std::endl;
-		std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
-		// std::cout << "\n Number of vStrips is: " << uvStripSetbyModule
 
-		if (!single_bin_mode || binNum == chosen_bin) {
-			std::cout << "\nCalling showgemstrips_for_ecalbin() from main script\n";
-			showgemstrips_for_ecalbin(uvStripSetbyModule);
+
+
+	// -- Printing info --
+std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMMod.size() << std::endl;
+
+	if (all_bins_mode) {
+		std::cout << "\n### ALL BINS MODE ###" << std::endl;
+
+		for (const auto& [binNum, uvStripSetbyModule] : map_physicalUVStrips_byECalBin_byGEMMod) {
+			std::cout << "\n### BIN NUMBER: " << binNum << " ###" << std::endl;
+			std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
+
+			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, uvStripSetbyModule);
+
+			if (!canvas) {
+				std::cerr << "Error: canvas is null for bin " << binNum << "!" << std::endl;
+				continue;
+			}
+
+			canvas->Update();
+			canvas->Draw();
+			gSystem->ProcessEvents();
 		}
-		if (single_bin_mode && binNum == chosen_bin) { break;}
-		
+	} else {
+		std::cout << "\n### SELECTED BINS MODE ###" << std::endl;
+
+		for (const int binNum : selected_bins) {
+			if (map_physicalUVStrips_byECalBin_byGEMMod.find(binNum) == map_physicalUVStrips_byECalBin_byGEMMod.end()) {
+				std::cerr << "Warning: Bin number " << binNum << " not found in data.\n";
+				continue;
+			}
+
+			const auto& uvStripSetbyModule = map_physicalUVStrips_byECalBin_byGEMMod[binNum];
+
+			std::cout << "\n### BIN NUMBER: " << binNum << " ###" << std::endl;
+			std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
+
+			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, uvStripSetbyModule);
+
+			if (!canvas) {
+				std::cerr << "Error: canvas is null for bin " << binNum << "!" << std::endl;
+				continue;
+			}
+
+			canvas->Update();
+			canvas->Draw();
+			gSystem->ProcessEvents();
+		}
 	}
 
-	
-
-
 	return 0;
-
 }
