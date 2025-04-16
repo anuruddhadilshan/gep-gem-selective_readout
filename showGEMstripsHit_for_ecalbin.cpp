@@ -31,38 +31,66 @@ std::map<int, gemInfo> refModMap = GetGemInfoMap();
 int global_canvas_id = 0;
 
 
-// // ---- Geometry settings ----
-// std::map<int, double> u_angles = {
-// 	{0, 0}, {1, 0},
-// 	{2, 60}, {3, 60}, {4, 60}, {5, 60},
-// 	{6, 0}, {7, 0}
-// };
 
-// std::map<int, double> v_angles = {
-// 	{0, 0}, {1, 0},
-// 	{2, -60}, {3, -60}, {4, -60}, {5, -60},
-// 	{6, 90}, {7, 90}
-// };
+double getOffset(int mod, int axis) {
+    // Axis: 0 = U, 1 = V
 
-// std::map<int, int> nstrips_u = {
-// 	{0, 3968}, {1, 3968},
-// 	{2, 3840}, {3, 3840}, {4, 3840}, {5, 3840},
-// 	{6, 5120}, {7, 5120}
-// };
+    // Define the offsets per module
+    const double u_offsets[14] = {
+        0.0176, // m0
+        0.0176, // m1
+        0.0108, // m2
+        0.0108, // m3
+        0.0108, // m4
+        0.0108, // m5
+        0.0,    // m6
+        0.0,    // m7
+        0.0,    // m8
+        0.0,    // m9
+        0.0,    // m10
+        0.0,    // m11
+        0.0,    // m12
+        0.0     // m13
+    };
 
-// std::map<int, int> nstrips_v = {
-// 	{0, 3456}, {1, 3456},
-// 	{2, 3840}, {3, 3840}, {4, 3840}, {5, 3840},
-// 	{6, 1536}, {7, 1536}
-// };
+    const double v_offsets[14] = {
+        0.0,    // m0
+        0.0,    // m1
+        0.0108, // m2
+        0.0108, // m3
+        0.0108, // m4
+        0.0108, // m5
+        0.0,    // m6
+        0.0,    // m7
+        0.0,    // m8
+        0.0,    // m9
+        0.0,    // m10
+        0.0,    // m11
+        0.0,    // m12
+        0.0     // m13
+    };
+
+    if (mod < 0 || mod >= 14) {
+        std::cerr << "Invalid module number: " << mod << std::endl;
+        return 0.0;
+    }
+
+    return (axis == 0) ? u_offsets[mod] : v_offsets[mod];
+}
 
 
 int uDrawn=0, vDrawn=0;
 
 
-void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
+
+void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 {
-	if(strip_num%10==0){//Testing with greater	plotted spacing for visibility
+
+	//NOTE:: calculates x and y values on canvas coordinates (+x to the right, +y up) then plots them in gem coordinates (+x down, +y left)
+	
+
+	if(strip_num%20==0){//Testing with greater	plotted spacing for visibility
+	// if(strip_num){//Testing with greater	plotted spacing for visibility
 	auto& modInfo = refModMap[modNum];
 
 	double mod_x = modInfo.position[0];
@@ -70,204 +98,111 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
 	double mod_size_x = modInfo.size[0];
 	double mod_size_y = modInfo.size[1];
 	double angle = modInfo.uvangles[axis] * TMath::DegToRad();
+
+	
+	// angle = -angle; // clockwise 
+
 	int n_strips = modInfo.nstripsuv[axis];
 	double pitch = 0.0004;
+
+	// std::cout << "strip_num " << strip_num << std::endl;
 
 
 	double layerSizeX=0;
 	double layerSizeY=0;
 
-	// if(modNum<6){ layerSizeX = mod_size_x;}
-	// if (modNum>=6){layerSizeX = mod_size_x *4;}
+	if(modNum<6){ layerSizeX = mod_size_x;}
+	if (modNum>=6){layerSizeX = mod_size_x *4;}
+
+	int center_strip = (n_strips - 1) / 2.0 ;
+
+	if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
 
 
 
-	// std::cout << "\nnumber of strips in mod " << n_strips << std::endl;
-	// std::cout << "\nThis strip number " << strip_num << std::endl;
+	//NOTE: indexes strip number so that the center strip(assumed to be approx at 0 on the module) is 0 and converts to physical distance with pitch
 
+	if (modNum){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;}
 
-	// Offset from center strip
-	// int center_strip = n_strips / 2;
-
-
-
-
-	
-	// double offset = (strip_num - center_strip) * pitch;//from center
-	double offset = (center_strip-strip_num) * pitch;//b/c strips counted downwards?
-
-
-
-	//TODO: consider specifics of y case
-
-
-	if(modNum<6){ layerSizeX = mod_size_x;
-		// offset-=.0108;//see .dat file
-		}
-		if (modNum>=6){layerSizeX = mod_size_x *4;}
-
-		double dx_offset, dy_offset;
-
-	// Offset is applied perpendicular to the strip direction
-	// double dx_offset = std::sin(angle);
-	// double dy_offset = -std::cos(angle);
-
-	// double dx_offset = std::cos(angle - TMath::Pi()/2);
-	// double dy_offset = std::sin(angle - TMath::Pi()/2);
-	// double dx_offset = std::cos(angle + TMath::Pi()/2);
-	// double dy_offset = std::sin(angle + TMath::Pi()/2);
-
-	if (axis == 0) {
-		// from 0 to pi/2 (U strips)
-		dx_offset = std::cos(angle + TMath::Pi()/2);
-		dy_offset = std::sin(angle + TMath::Pi()/2);
-	} else {
-		//from 0 to 3pi/2
-		dx_offset = std::cos(angle - TMath::Pi()/2);
-		dy_offset = std::sin(angle - TMath::Pi()/2);
-	}
-
-
-// 	Double_t fPxU = cos(uangle);            //U Strip X projection = cos( UAngle );
-//   Double_t fPyU = sin(uangle);            //U Strip Y projection = sin( UAngle );
-//   Double_t fPxV = cos(vangle);            //V Strip X projection = cos( VAngle );
-//   Double_t fPyV = sin(vangle);            //V Strip Y projection = sin( VAngle );
-
-
-
-	// double zero_strip_offset = -center_strip * pitch;
-	// double strip_relative_offset = strip_num * pitch;
-	
-	// double total_offset = zero_strip_offset + strip_relative_offset;
-	
-	// double x_center = mod_x + total_offset * dx_offset;
-	// double y_center = mod_y + total_offset * dy_offset;
-	double x_center = mod_x + offset * dx_offset ;
-	double y_center = mod_y + offset * dy_offset;
-	// Compute starting edge of strip 0 (first strip)
-	
-	
+	double strip_num_offset = strip_num - center_strip;
 
 	
-	// double half_len = 0.5 * mod_size_y;
-	// Give a generous length for the line, then clip
-	// double half_len = 0.5 * mod_size_y * 1.2;
-	double half_length = 0.5 * (
-		fabs(mod_size_x * cos(angle)) +
-		fabs(mod_size_y * sin(angle))
+	double distFromCenter = (strip_num_offset) * pitch;//
+
+	double fPx, fPy;
+	double dx_offset, dy_offset;
+
+	//NOTE:clockwise rotation is positive
+	fPx = std::cos(angle);
+	fPy = std::sin(angle);
+
+
+
+	// NOTE: OFFSET PERPENDICULAR TO STRIP DIRECTION
+
+	dx_offset = std::cos(angle + (TMath::Pi()/2)); // Offset direction
+	dy_offset = std::sin(angle + (TMath::Pi()/2));
+
+
+
+	//NOTE: xy coords of the center of the current strip(shifted perpendicular to the strip)
+	double x_center = (distFromCenter * fPx  + (mod_x+getOffset(modNum, axis)));
+
+	
+	double y_center = (mod_y+getOffset(modNum, axis) + distFromCenter * fPy) ;
+
+
+	TMarker* OffsetMark = new TMarker(distFromCenter * fPy, distFromCenter * fPx, 20);
+	OffsetMark->SetMarkerSize(0.3);
+	OffsetMark->SetMarkerColor(kBlue);
+	// OffsetMark->Draw("same");
+
+	TMarker* centerMark = new TMarker(y_center, x_center, 20);
+	centerMark->SetMarkerSize(0.3);
+	// centerMark->Draw("same");
+
+	double half_length = 0.5 * (TMath::Sqrt(
+		TMath::Sq(fabs(mod_size_x * cos(angle))) +
+		TMath::Sq(fabs(mod_size_y * sin(angle))))
 	);
 	
 
-	double x1 = x_center - mod_size_x/2 * std::cos(angle);
-	// double x1 = x_center - half_length * std::cos(angle);
-	// double x1 = x_center - layerSizeX/2 * std::cos(angle);
-	double y1 = y_center - mod_size_y/2 * std::sin(angle);
-	// double y1 = y_center - half_length * std::sin(angle);
-	double x2 = x_center + mod_size_x/2 * std::cos(angle);
-	// double x2 = x_center + half_length * std::cos(angle);
-	// double x2 = x_center + layerSizeX/2 * std::cos(angle);
-	double y2 = y_center + mod_size_y/2 * std::sin(angle);
-	// double y2 = y_center + half_length * std::sin(angle);
+	double x1 = x_center - half_length * dx_offset;
+	double x2 = x_center + half_length * dx_offset;
+
+	double y1, y2;
 	
+	if (modNum>=6 && axis==0){y1 = y_center - mod_size_y/2;
+	y2 = y_center + mod_size_y/2;
+	}
+	else {y1 = y_center - half_length * dy_offset;	
+		y2 = y_center + half_length * dy_offset;
+		}
 
+	// X center line (vertical): fix "x" value at 0 (your flipped), span full Y range
+	TLine* xCenterLine = new TLine(
+		-mod_size_y / 2.0, 0,
+		+mod_size_y / 2.0, 0
+	);
 
-	if (modNum < 3){//5-7 are kinda fine focus on way off first
+	// Y center line (horizontal): fix "y" value at 0 (your flipped), span full X range
+	TLine* yCenterLine = new TLine(
+		0, -mod_size_x / 2.0,
+		0, +mod_size_x / 2.0
+	);
 
-		std::cout << "\n------------\nMod Num " << modNum << std::endl;
-		std::cout << "axis: " << axis << std::endl;
-		std::cout << "angle: " << angle*TMath::RadToDeg() << std::endl;
-
-		std::cout << "\nnumber of strips in mod " << n_strips << std::endl;
-		std::cout << "Center strip: " << center_strip << std::endl;
-		std::cout << "This strip number " << strip_num << std::endl;
-		std::cout << " Strip offset: " << strip_num-center_strip << std::endl;
-
-		std::cout << "\noffset: " << offset << std::endl;
-		std::cout << "dx offset: " << dx_offset << std::endl;
-		std::cout << "dy offset: " << dy_offset << std::endl;
-		std::cout << "offset * dx_offset: " << offset * dx_offset << std::endl;
-		std::cout << "offset * dy_offset: " << offset * dy_offset << std::endl;
-	
-		std::cout << "\nmod Pos size(modCoords) x y: " << mod_x << " " << mod_y<<std::endl;
-		std::cout << "layer size(modCoords) x y: " << layerSizeX << " " << mod_size_y<<std::endl;
-	
-		std::cout << "\nxCenter yCenter: " << x_center << " " << y_center <<std::endl;
-	};
-
-
-
-
-
-		// Optional: mark center point (useful for debug)
-		TMarker* centerMark = new TMarker(y_center, x_center, 20);
-		centerMark->SetMarkerSize(0.3);
-		// centerMark->SetMarkerColor(kGray + 2);
-		centerMark->Draw("same");
-
-
-		
-// 	// 	std::cout << "x1 y1: " << x1 << " " << y1 <<std::endl;
-// 	// 	std::cout << "x2 y2: " << x2 << " " << y2 <<std::endl;
-// 	// 	}
-
-// 		double layer_center_x, layer_center_y;
-
-// if (modNum < 6) {
-//     layer_center_x = mod_x;
-//     layer_center_y = mod_y;
-// } else {
-//     std::vector<int> layerMods = (modNum <= 9) ? std::vector<int>{6,7,8,9} : std::vector<int>{10,11,12,13};
-//     double xsum = 0.0, ysum = 0.0;
-//     for (int m : layerMods) {
-//         xsum += refModMap[m].position[0];
-//         ysum += refModMap[m].position[1];
-//     }
-//     layer_center_x = xsum / layerMods.size();
-//     layer_center_y = ysum / layerMods.size();
-// }
-
-// 		x_center -= layer_center_x;
-// 		y_center -= layer_center_y;
-// 		x1 -= layer_center_x;
-// 		y1 -= layer_center_y;
-// 		x2 -= layer_center_x;
-// 		y2 -= layer_center_y;
-
-
-
-
-// 		// Optional: mark center point (useful for debug)
-// 		TMarker* centerMark = new TMarker(y_center, x_center, 20);
-// 		centerMark->SetMarkerSize(0.3);
-// 		// centerMark->SetMarkerColor(kGray + 2);
-// 		centerMark->Draw("same");
-
-
-	
-	// TLine* xCenterLine = new TLine(0, -layerSizeX/2, 0, +layerSizeX/2);
-	TLine* xCenterLine = new TLine(0, -mod_size_x/2, 0, +mod_size_x/2);
-	TLine* yCenterLine = new TLine(mod_y-mod_size_y/2, 0, mod_y+mod_size_y/2, 0);
-	// TLine* xCenterLine = new TLine(0, mod_y-mod_size_y/2, 0, mod_y+mod_size_y/2);
-	// TLine* yCenterLine = new TLine(-layerSizeX/2, 0, +layerSizeX/2, 0);
-
-
-	xCenterLine->Draw("SAME");
-	yCenterLine->Draw("SAME");
+	// xCenterLine->Draw("SAME");
+	// yCenterLine->Draw("SAME");
 
 
 
 
 	// Module boundaries in global coordinates
-
-	
-
 	double xmin = - layerSizeX / 2.0;
 	double xmax = + layerSizeX / 2.0;
 
 	double ymin = -mod_size_y / 2.0;
 	double ymax = mod_size_y / 2.0;
-
-	// std::cout << "\nclipping to xmin ymin xmax ymax" << "\n"<< xmin << " "<< ymin << " "<< xmax << " "<< ymax <<std::endl;
 
 	// Liang-Barsky clipping
 	auto clipLine = [&](double& x1, double& y1, double& x2, double& y2) -> bool {
@@ -304,14 +239,8 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
 	if (!clipLine(x1, y1, x2, y2)) return; // Strip is entirely outside module
 
 
-	
-	// Optional: mark center point (useful for debug)
-	// TMarker* centerMark = new TMarker(x_center, y_center, 20);
-	// centerMark->SetMarkerSize(0.3);
-	// centerMark->SetMarkerColor(kGray + 2);
-	// centerMark->Draw("same");
-
 	// Draw the clipped strip
+	// TLine* stripLine = new TLine(x1, y1, x2, y2); //Drawn 
 	TLine* stripLine = new TLine(y1, x1, y2, x2); //Drawn 
 	if (axis == 0) { // U
 		stripLine->SetLineColor(kCyan);
@@ -335,10 +264,8 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int center_strip)
 
 
 // ---- GEM Strip ROI Visualization ----
-// void showgemstrips_for_ecalbin(const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerLayer)
-// void showgemstrips_for_ecalbin(std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerLayer)
-// void showgemstrips_for_ecalbin(int ecalBinNum, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
-TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
+
+TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod)
 {
 
 	std::cout << "\n\nStarting showgemstrips_for_ecalbin()" <<std::endl;
@@ -365,11 +292,11 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, const std::map<int, std::pair
 	C->Divide(4, 2);
 
 	// Draw ECal Bin number at the top of the canvas
-TLatex latex;
-latex.SetNDC(); // Use normalized device coordinates
-latex.SetTextSize(0.04);
-latex.SetTextAlign(22); // Center alignment
-latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
+	TLatex latex;
+	latex.SetNDC(); // Use normalized device coordinates
+	latex.SetTextSize(0.04);
+	latex.SetTextAlign(22); // Center alignment
+	latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 
 
 	// int uDrawn=0, vDrawn=0;
@@ -414,11 +341,17 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 		double mod_size_x = modSize[0]; // actual horizontal extent
 		double mod_size_y = modSize[1]; // actual vertical extent
 
-		xMin = -layerSizeX / 2.;// *3;
-		xMax = +layerSizeX / 2.;// *3;
-		yMin = -mod_size_y / 2.;// *3;
-		yMax = +mod_size_y / 2.;// *3;
-
+		
+		xMin = -layerSizeX / 2. -.1;// *3;
+		xMax = +layerSizeX / 2. +.1;// *3;
+		yMin = -mod_size_y / 2. -.1;// *3;
+		yMax = +mod_size_y / 2. +.1;// *3;
+		// xMin = std::floor(-layerSizeX / 2. *10)/10;// *3;
+		// xMax = std::ceil(+layerSizeX / 2. *10)/10;// *3;
+		// yMin = std::floor(-mod_size_y / 2. *10)/10;// *3;
+		// yMax = std::ceil(+mod_size_y / 2. *10)/10;// *3;
+		
+		
 		
 		std::cout << "\nxMin, yMin: " << xMin << ", " << yMin 
 		<< "\nxMax, yMax: " << xMax << ", " << yMax << std::endl;
@@ -440,13 +373,82 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 			// 100, -0.5*100, 0.5*100, 100, -1.0*100, 1.0*100
 			100, yMin, yMax, 100, xMin, xMax
 		);
+
+		// dummy->Fill(binROI.xMin, binROI.yMin, 0);
+		// dummy->Fill(binROI.xMax, binROI.yMax, 0);
+
 		dummy->SetStats(0);
 		dummy->Draw();
+
+
+		double Layer_yMin = -layerSizeX / 2.;// *3;
+		double Layer_yMax = +layerSizeX / 2.;// *3;
+		double Layer_xMin = -mod_size_y / 2.;// *3;
+		double Layer_xMax = +mod_size_y / 2.;// *3;
+		TLine* Layer_left = new TLine(Layer_xMin, Layer_yMin, Layer_xMin, Layer_yMax);
+			TLine* Layer_right = new TLine(Layer_xMax, Layer_yMin, Layer_xMax, Layer_yMax);
+			TLine* Layer_top = new TLine(Layer_xMin, Layer_yMax, Layer_xMax, Layer_yMax);
+			TLine* Layer_bottom = new TLine(Layer_xMin, Layer_yMin, Layer_xMax, Layer_yMin);
+		
+			// roi_left->SetLineColor(kGreen);
+			// roi_right->SetLineColor(kGreen);
+			// roi_top->SetLineColor(kGreen);
+			// roi_bottom->SetLineColor(kGreen);
+		
+			Layer_left->SetLineWidth(2);
+			Layer_right->SetLineWidth(2);
+			Layer_top->SetLineWidth(2);
+			Layer_bottom->SetLineWidth(2);
+		
+			Layer_left->Draw("same");
+			Layer_right->Draw("same");
+			Layer_top->Draw("same");
+			Layer_bottom->Draw("same");
+
+
 
 		// TLatex* latex = new TLatex();
 		// latex->SetNDC(); // normalized coordinates (0–1)
 		// latex->SetTextSize(0.05);
 		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
+
+		if (binROI.find(layer) != binROI.end()) {
+			const ROI& roi = binROI.at(layer);
+		
+			double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
+			double xMaxROI = roi.yMax;
+			double yMinROI = roi.xMin;
+			double yMaxROI = roi.xMax;
+
+			// //xy already in GEM coords?
+			// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
+			// double xMaxROI = roi.xMax;
+			// double yMinROI = roi.yMin;
+			// double yMaxROI = roi.yMax;
+
+			std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
+			<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
+		
+			TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
+			TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
+			TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
+			TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
+		
+			roi_left->SetLineColor(kGreen);
+			roi_right->SetLineColor(kGreen);
+			roi_top->SetLineColor(kGreen);
+			roi_bottom->SetLineColor(kGreen);
+		
+			roi_left->SetLineWidth(2);
+			roi_right->SetLineWidth(2);
+			roi_top->SetLineWidth(2);
+			roi_bottom->SetLineWidth(2);
+		
+			roi_left->Draw("same");
+			roi_right->Draw("same");
+			roi_top->Draw("same");
+			roi_bottom->Draw("same");
+		}
 
 	}
 
@@ -489,6 +491,9 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 		std::cout << "\nChanging to subpad(layer plot) Numbererd " << pad->GetNumber() <<std::endl;
 		std::cout << "\nChanging to Canvas " << pad->GetCanvasID() <<std::endl;
 
+		pad->SetGridx();
+		pad->SetGridy();
+
 		pad->cd();  
 
 		// // double mod_y = 0.0;
@@ -520,6 +525,15 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 		std::cout << "\n N uStrips = " << uvStripPair.first.size() << std::endl;
 		std::cout << "N vStrips = " << uvStripPair.second.size() << std::endl;
 
+		// std::cout << "\n N uStrips in Mod " << thisModInfo.nstripsuv[0] << std::endl;
+		std::cout << "N vStrips in Mod " << thisModInfo.nstripsuv[1] << std::endl;	
+
+		int local_center_v = (*uvStripPair.second.begin() + *uvStripPair.second.rbegin()) / 2;
+
+		std::cout << "min v strip " << *uvStripPair.second.begin() << std::endl;
+		std::cout << "max v strip " << *uvStripPair.second.rbegin() << std::endl;
+		std::cout << "\nlocal center v strip " << local_center_v << std::endl;
+
 		int vStripLoopCalls=0;
 		for (auto& vStrip : uvStripPair.second){
 		// for (auto& vStrip : std::array{10, 20 , 30 , 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000}){
@@ -527,7 +541,7 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 			// std::cout << "\nDrawing vStrip " << vStrip << std::endl;
 
 			vStripLoopCalls+=1;
-			int local_center_v = (*uvStripPair.second.begin() + *uvStripPair.second.rbegin()) / 2;
+			// int local_center_v = (*uvStripPair.second.begin() + *uvStripPair.second.rbegin()) / 2;
 			drawGEMStrip(mod, 1, vStrip, local_center_v);
 			// drawGEMStrip(mod_x, mod_y, "V", v_angle, vStrip, pitch, n_v, mod_size_x, mod_size_y);
 // drawGEMStrip(mod_x, mod_y, "V", v_angle, vStrip, pitch, n_v);
@@ -540,6 +554,17 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 
 		}
 
+
+		std::cout << "\n N uStrips in Mod " << thisModInfo.nstripsuv[0] << std::endl;
+		
+
+		int local_center_u = (*uvStripPair.first.begin() + *uvStripPair.first.rbegin()) / 2;
+
+		std::cout << "min v strip " << *uvStripPair.second.begin() << std::endl;
+		std::cout << "max v strip " << *uvStripPair.second.rbegin() << std::endl;
+		std::cout << "\nlocal center v strip " << local_center_v << std::endl;
+
+
 		int uStripLoopCalls=0;
 		
 		// for (int uStrip=0 , uStrip=uStripuvStripPair.first.size; uStrip++){¸
@@ -551,7 +576,7 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 
 			uStripLoopCalls+=1;
 			// std::cout << "\ncalled uStrip loop " << uStripLoopCalls << std::endl;
-			int local_center_u = (*uvStripPair.first.begin() + *uvStripPair.first.rbegin()) / 2;
+			// int local_center_u = (*uvStripPair.first.begin() + *uvStripPair.first.rbegin()) / 2;
 			drawGEMStrip(mod, 0, uStrip, local_center_u);
 			// drawGEMStrip(mod, 0, uStripuvStripPair.first[0]);
 			// drawGEMStrip(mod_x, mod_y, "U", u_angle, uStrip, pitch, n_u, mod_size_x, mod_size_y);
@@ -589,8 +614,6 @@ latex.DrawLatex(0.5, 0.97, Form("ECal Bin %d", ecalBinNum));
 				  << ", V strips = " << uvStripPair.second.size() << std::endl;
 	}
 
-	// std::cout<< "\nActive Ustrips = " << uDrawn << " Active Ustrips = " << vDrawn << std::endl;
-
 	// C->SetBit(kMustCleanup); // ROOT will clean safely
 	C->Update();
 	// gSystem->ProcessEvents();
@@ -622,6 +645,9 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 		return -1;
 	}
 
+
+	//NOTE: start "cataloging"
+
 	std::map< int, GEMLayer > map_GEMLayers = db.returnGEMLayerMap();
 
 	std::map< int, std::map< int, ROI > > map_ROIsByBinsAndLayers = roi.return_ROIMap();
@@ -640,6 +666,9 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 	}
 
 
+
+
+	//NOTE: start EcalBin to strip mapping
 	
 	// FINAL OUTPUT FOR Rafael to convert to GEM VTP, FIBER, and APV info.
 	
@@ -676,12 +705,20 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 
 		map_physicalUVStrips_byECalBin_byGEMMod[binNum] = map_allUVstripsSetsForAllModules_forThisECalBin;
 
+// 		std::cout << "For bin " << binNum << " collected modules:\n";
+// for (const auto& [modNum, modUVstripPair] : map_allUVstripsSetsForAllModules_forThisECalBin) {
+//     std::cout << "Module " << modNum 
+//               << " has U strips: " << modUVstripPair.first.size()
+//               << ", V strips: " << modUVstripPair.second.size() << std::endl;
+// }
+
+
 		}
 	}
 	
 	
 	std::string usrinput;
-	std::cout << "Enter ECal bin numbers to visualize separated by spaces (or 'q' to quit): ";
+	std::cout << "Enter ECal bin numbers to visualize separated by spaces, 'Return' to visualize all ECalBins or 'q' to quit: ";
 	std::getline(std::cin, usrinput);
 
 	// Quit option
@@ -735,6 +772,10 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 	// -- Printing info --
 std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMMod.size() << std::endl;
 
+
+
+	// NOTE:Start using Cataloged info
+
 	if (all_bins_mode) {
 		std::cout << "\n### ALL BINS MODE ###" << std::endl;
 
@@ -742,7 +783,7 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			std::cout << "\n### BIN NUMBER: " << binNum << " ###" << std::endl;
 			std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
 
-			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, uvStripSetbyModule);
+			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, map_ROIsByBinsAndLayers[binNum], uvStripSetbyModule);
 
 			if (!canvas) {
 				std::cerr << "Error: canvas is null for bin " << binNum << "!" << std::endl;
@@ -767,7 +808,7 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			std::cout << "\n### BIN NUMBER: " << binNum << " ###" << std::endl;
 			std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
 
-			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, uvStripSetbyModule);
+			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, map_ROIsByBinsAndLayers[binNum], uvStripSetbyModule);
 
 			if (!canvas) {
 				std::cerr << "Error: canvas is null for bin " << binNum << "!" << std::endl;
