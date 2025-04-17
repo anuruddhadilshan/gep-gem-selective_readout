@@ -104,8 +104,8 @@ int generate_ROI_APVlist( const std::string& db_local = "db_FT_local.dat", const
 					currStripKeys.axis = 0;
 
 
-					// currStripKeys.pos = stripID/128;//APV position
-					currStripKeys.pos = (stripID/128)-1;//APV position
+					currStripKeys.pos = stripID/128;//APV position
+					// currStripKeys.pos = (stripID/128)-1;//APV position
 
 					// posInAPV = stripID%128;
 
