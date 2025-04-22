@@ -95,7 +95,7 @@ public:
 
 		}
 
-		std::cout << "Bin Layer xMin xMax yMin yMax" <<std::endl;
+		// std::cout << "Bin Layer xMin xMax yMin yMax" <<std::endl;
 
 		for ( const auto& [binNum, layer_roi] : m_roi )
 		{
