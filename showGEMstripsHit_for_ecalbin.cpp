@@ -146,10 +146,15 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 
 	//NOTE: xy coords of the center of the current strip(shifted perpendicular to the strip)
-	double x_center = (distFromCenter * fPx  + (mod_x+getOffset(modNum, axis)));
+	double x_center = (distFromCenter * fPx  
+	+ (mod_x
+		-getOffset(modNum, axis)
+	));
 
 	
-	double y_center = (mod_y+getOffset(modNum, axis) + distFromCenter * fPy) ;
+	double y_center = (mod_y
+		-getOffset(modNum, axis) 
+		+ distFromCenter * fPy) ;
 
 
 	TMarker* OffsetMark = new TMarker(distFromCenter * fPy, distFromCenter * fPx, 20);
