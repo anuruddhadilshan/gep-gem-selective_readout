@@ -27,6 +27,7 @@ struct apvInfoVals {
 std::map<apvInfoKeys, apvInfoVals> apvInfoMap;
 
 // Function to read reference file and fill `apvInfoMap`
+// void MakeRefMap(const char* refFile) {
 void MakeRefMap(const char* refFile) {
     std::ifstream aRefFile(refFile);
     if (!aRefFile.is_open()) {
@@ -125,12 +126,28 @@ void OutputRefMap() {
     std::cout << "Parsed data written to gemFT_Map_TEST.txt\n";
 }
 
+const char* refFile = "db_sbs.gemFT_TEST.txt";
+
+
+std::map <apvInfoKeys, apvInfoVals> GetAPVinfoMap(){
+    MakeRefMap(refFile);
+
+    // OutputRefMap();
+    // printAPVinfoMap();
+
+    // return 0;
+    return apvInfoMap;
+}
+
+
+// void MakeAPVinfoMap() {
 void MakeAPVinfoMap() {
-    const char* refFile = "db_sbs.gemFT_TEST.txt";
+    // const char* refFile = "db_sbs.gemFT_TEST.txt";
     MakeRefMap(refFile);
 
     OutputRefMap();
     // printAPVinfoMap();
 
     // return 0;
+    // return apvInfoMap;
 }
