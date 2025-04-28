@@ -24,7 +24,7 @@ m0.uangle 180.0
 m0.vangle 135.0
 
 m1.uangle 180.0
-m1.uangle -135.0
+m1.vangle -135.0
 
 m2.uangle 150.0
 m2.vangle -150.0
