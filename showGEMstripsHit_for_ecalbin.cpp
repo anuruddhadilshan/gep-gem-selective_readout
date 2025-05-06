@@ -116,15 +116,19 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 	int center_strip = (n_strips - 1) / 2.0 ;
 
-	if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
+	// if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
 
 
 
 	//NOTE: indexes strip number so that the center strip(assumed to be approx at 0 on the module) is 0 and converts to physical distance with pitch
 
-	if (modNum){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;}
-
+	
 	double strip_num_offset = strip_num - center_strip;
+
+
+	if (modNum<6){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;
+	std::cout << "\nCenter strip " << center_strip << std::endl;
+	}
 
 	
 	double distFromCenter = (strip_num_offset) * pitch;//
@@ -166,10 +170,12 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	centerMark->SetMarkerSize(0.3);
 	// centerMark->Draw("same");
 
-	double half_length = 0.5 * (TMath::Sqrt(
-		TMath::Sq(fabs(mod_size_x * cos(angle))) +
-		TMath::Sq(fabs(mod_size_y * sin(angle))))
-	);
+	// double half_length = 0.5 * (TMath::Sqrt(
+	// 	TMath::Sq(fabs(mod_size_x * cos(angle))) +
+	// 	TMath::Sq(fabs(mod_size_y * sin(angle))))
+	// );
+
+	double half_length = mod_size_x / 2.0;
 	
 
 	double x1 = x_center - half_length * dx_offset;
@@ -265,6 +271,7 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	stripLine->Draw("same");
 }
 }
+
 
 
 
@@ -513,7 +520,7 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 		
 		double u_angle = thisModInfo.uvangles[0];
 		double v_angle = thisModInfo.uvangles[1];
-		double pitch = 0.004;
+		double pitch = 0.0004;
 		int n_u = thisModInfo.nstripsuv[0];
 		int n_v = thisModInfo.nstripsuv[1];
 
@@ -628,10 +635,11 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 }
 
 
-int exportPDF(TCanvas * C){
-	C->SaveAs("GEM_ECalBin.pdf");
-	return 0;
+int exportPDF(TCanvas *C, int binNum) {
+    C->SaveAs(Form("GEM_ECalBin%d.pdf", binNum));
+    return 0;
 }
+
 
 
 //Main func
@@ -751,14 +759,14 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 	}
 
 	
-	// // --- NEW CLEAN INPUT: Ask about PDF saving ---
-	// bool save_as_pdf = false;
-	// std::string usr_save_as_pdf;
-	// std::cout << "Save as PDF and quit? (y/n): ";
-	// std::getline(std::cin, usr_save_as_pdf);
-	// if (usr_save_as_pdf == "y" || usr_save_as_pdf == "Y") {
-	// 	save_as_pdf = true;
-	// }
+	// --- NEW CLEAN INPUT: Ask about PDF saving ---
+	bool save_as_pdf = false;
+	std::string usr_save_as_pdf;
+	std::cout << "Save as PDF(y) or show Active Canvas(n)? (y/n): ";
+	std::getline(std::cin, usr_save_as_pdf);
+	if (usr_save_as_pdf == "y" || usr_save_as_pdf == "Y") {
+		save_as_pdf = true;
+	}
 	
 	
 	// bool interactive_view = false;
@@ -796,7 +804,13 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			}
 
 			canvas->Update();
-			canvas->Draw();
+
+			if (save_as_pdf==true){
+				exportPDF(canvas, binNum);
+				// return 0;
+			}
+
+			// canvas->Draw();
 			gSystem->ProcessEvents();
 		}
 	} else {
@@ -821,7 +835,13 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			}
 
 			canvas->Update();
-			canvas->Draw();
+
+			if (save_as_pdf==true){
+				exportPDF(canvas, binNum);
+				// return 0;
+			}
+
+			// canvas->Draw();
 			gSystem->ProcessEvents();
 		}
 	}
