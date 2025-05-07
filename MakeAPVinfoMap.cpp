@@ -7,6 +7,8 @@
 
 #include <iomanip>
 
+// #include "DBread.h"
+
 // Define key-value structs
 struct apvInfoKeys {
     int gemid, axis, pos;
@@ -141,13 +143,13 @@ std::map <apvInfoKeys, apvInfoVals> GetAPVinfoMap(){
 
 
 // void MakeAPVinfoMap() {
-void MakeAPVinfoMap() {
+int MakeAPVinfoMap() {
     // const char* refFile = "db_sbs.gemFT_TEST.txt";
     MakeRefMap(refFile);
 
     OutputRefMap();
-    // printAPVinfoMap();
+    printAPVinfoMap();
 
-    // return 0;
+    return 0;
     // return apvInfoMap;
 }
