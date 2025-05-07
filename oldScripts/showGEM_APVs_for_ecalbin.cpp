@@ -24,9 +24,15 @@
 
 #include "GetGemInfoMap.cxx"
 
+
 // namespace GEMstripsHit_for_ecalbin{
 
+// std::map<int, gemInfo> refModMap = GetGemInfoMap();
 std::map<int, gemInfo> refModMap = GetGemInfoMap();
+
+// auto refAPVkeys = apvInfoKeys{};
+// auto apvInfoKeys = returnAPVInfoKeys();
+
 
 int global_canvas_id = 0;
 
@@ -90,9 +96,9 @@ void draw_yx_GEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	//NOTE:: calculates x and y values on canvas coordinates (+x to the right, +y up) then plots them in gem coordinates (+x down, +y left)
 	
 
-	if(strip_num%20==0){//Testing with greater	plotted spacing for visibility
-	// if(strip_num){//Testing with greater	plotted spacing for visibility
-	auto& modInfo = refModMap[modNum];
+	// if(strip_num%20==0){//Testing with greater	plotted spacing for visibility
+	if(strip_num){//Testing with greater	plotted spacing for visibility
+	auto& modInfo = gemInfoMap[modNum];
 
 	double mod_x = modInfo.position[0];
 	double mod_y = modInfo.position[1];
@@ -299,7 +305,7 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	double angle = modInfo.uvangles[axis] * TMath::DegToRad();
 
 	
-	angle = -angle; // clockwise 
+	// angle = -angle; // clockwise 
 
 	int n_strips = modInfo.nstripsuv[axis];
 	double pitch = 0.0004;
@@ -315,27 +321,18 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 	int center_strip = (n_strips - 1) / 2.0 ;
 
-	// if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
+	if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
 
 
 
 	//NOTE: indexes strip number so that the center strip(assumed to be approx at 0 on the module) is 0 and converts to physical distance with pitch
 
-	// if (modNum){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;}
+	if (modNum){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;}
 
 	double strip_num_offset = strip_num - center_strip;
 
-
-	if (modNum == 1){
-		// angle = -angle;
-		// strip_num_offset = -strip_num_offset;
-	}
-
-
 	
 	double distFromCenter = (strip_num_offset) * pitch;//
-
-	
 
 	double fPx, fPy;
 	double dx_offset, dy_offset;
@@ -343,15 +340,6 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	//NOTE:clockwise rotation is positive
 	fPx = std::cos(angle);
 	fPy = std::sin(angle);
-	// fPx = std::cos(angle + (TMath::Pi()/2));;
-	// fPy = std::sin(angle + (TMath::Pi()/2));;
-
-	// fPx = -fPy;
-	// fPy = fPx;
-
-	if (modNum < 6) {
-		std::cout << "\nAngle " << angle*TMath::RadToDeg() << std::endl;
-	}
 
 
 
@@ -359,51 +347,39 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 	dx_offset = std::cos(angle + (TMath::Pi()/2)); // Offset direction
 	dy_offset = std::sin(angle + (TMath::Pi()/2));
-	// dx_offset = std::cos(angle); // Offset direction
-	// dy_offset = std::sin(angle);
 
-	
-
-
-	// dx_offset = dy_offset;
-	// dy_offset = dx_offset;
 
 
 	//NOTE: xy coords of the center of the current strip(shifted perpendicular to the strip)
-	// double x_center = (distFromCenter * fPx  + (mod_x-getOffset(modNum, axis)));
-	double x_center = (distFromCenter * fPx  + (mod_x));
-	// double x_center = (distFromCenter * dx_offset  + (mod_x+getOffset(modNum, axis)));
+	double x_center = (distFromCenter * fPx  
+	+ (mod_x
+		-getOffset(modNum, axis)//shifted upward toward -x b/c negative offset
+	));
 
 	
-	// double y_center = (mod_y+getOffset(modNum, axis) + distFromCenter * dy_offset) ;
-	double y_center = (mod_y-getOffset(modNum, axis) + distFromCenter * fPy) ;
-	// double y_center = (mod_y + distFromCenter * fPy) ;
+	double y_center = (mod_y
+		-getOffset(modNum, axis)//shifted upward toward -x b/c negative offset 
+		+ distFromCenter * fPy) ;
 
 
-	// TMarker* OffsetMark = new TMarker(distFromCenter * fPy, distFromCenter * fPx, 20);
-	// OffsetMark->SetMarkerSize(0.3);
-	// OffsetMark->SetMarkerColor(kBlue);
+	TMarker* OffsetMark = new TMarker(distFromCenter * fPy, distFromCenter * fPx, 20);
+	OffsetMark->SetMarkerSize(0.3);
+	OffsetMark->SetMarkerColor(kBlue);
 	// OffsetMark->Draw("same");
 
-	TMarker* centerMark = new TMarker(-y_center, x_center, 20);
-	// TMarker* centerMark = new TMarker(x_center, y_center, 20);
+	TMarker* centerMark = new TMarker(y_center, x_center, 20);
 	centerMark->SetMarkerSize(0.3);
 	// centerMark->Draw("same");
 
-	double half_length = 0.5 * (TMath::Sqrt(
-		TMath::Sq(fabs(mod_size_x * cos(angle))) +
-		TMath::Sq(fabs(mod_size_y * sin(angle))))
-	);
-
-	// std::cout << "half_length " << half_length << std::endl;
-	// std::cout << "mod_size_x " << mod_size_x << std::endl;
-	// std::cout << "mod_size_y " << mod_size_y << std::endl;
+	// double half_length = 0.5 * (TMath::Sqrt(
+	// 	TMath::Sq(fabs(mod_size_x * cos(angle))) +
+	// 	TMath::Sq(fabs(mod_size_y * sin(angle))))
+	// );
+	double half_length = mod_size_x / 2.0;
 	
 
 	double x1 = x_center - half_length * dx_offset;
 	double x2 = x_center + half_length * dx_offset;
-	// double x1 = x_center - half_length * fPx;
-	// double x2 = x_center + half_length * fPx;
 
 	double y1, y2;
 	
@@ -413,11 +389,6 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	else {y1 = y_center - half_length * dy_offset;	
 		y2 = y_center + half_length * dy_offset;
 		}
-
-	// y1 = y_center - half_length * dy_offset;	
-		// y2 = y_center + half_length * dy_offset;
-		// y1 = y_center - half_length * fPy;
-		// y2 = y_center + half_length * fPy;
 
 	// X center line (vertical): fix "x" value at 0 (your flipped), span full Y range
 	TLine* xCenterLine = new TLine(
@@ -481,9 +452,7 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 	// Draw the clipped strip
 	// TLine* stripLine = new TLine(x1, y1, x2, y2); //Drawn 
-	// TLine* stripLine = new TLine(y1*sin(TMath::Pi()/2), x1*cos(TMath::Pi()/2), y2*sin(TMath::Pi()/2), x2*cos(TMath::Pi()/2)); //Drawn 
-	// TLine* stripLine = new TLine(-y1*(fPx), x1*(-fPy), -y2*(fPx), x2*(-fPy)); //Drawn 
-	TLine* stripLine = new TLine(-y1, x1, -y2, x2); //Drawn 
+	TLine* stripLine = new TLine(y1, x1, y2, x2); //Drawn 
 	if (axis == 0) { // U
 		stripLine->SetLineColor(kCyan);
 		// stripLine->SetLineStyle(2);
@@ -491,17 +460,6 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 		stripLine->SetLineWidth(1);
 		// stripLine->SetLineWidth(.3);
 		uDrawn++;
-        if ((strip_num%((n_strips-1)/2))==0){
-        // TMarker* APVMark = new TMarker(y2, distFromCenter * fPx, 20);
-        TMarker* APVMark = new TMarker(y1, x1, 21);
-        APVMark->SetMarkerSize(0.3);
-        APVMark->SetMarkerColor(kBlack);
-        // APVMark->SetMarkerStyle(21);
-        // APVMark->Draw("same");
-        uAPVs++;
-        }
-
-
 	} else {         // V
 		stripLine->SetLineColor(kPink);
 		// stripLine->SetLineStyle(2);
@@ -509,19 +467,9 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 		stripLine->SetLineWidth(1);
 		// stripLine->SetLineWidth(.3);
 		vDrawn++;
-        }
-        if ((strip_num%((n_strips-1)/2))==0){
-        // TMarker* APVMark = new TMarker(y1, distFromCenter * fPx, 20);
-        TMarker* APVMark = new TMarker(y2, x2, 21);
-        APVMark->SetMarkerSize(0.3);
-        APVMark->SetMarkerColor(kBlack);
-        // APVMark->SetMarkerStyle(21);
-        // APVMark->Draw("same");
-        vAPVs++;
-        }
+	}
 	stripLine->Draw("same");
-    }
-
+}
 }
 
 
@@ -770,7 +718,7 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 		
 		double u_angle = thisModInfo.uvangles[0];
 		double v_angle = thisModInfo.uvangles[1];
-		double pitch = 0.004;
+		double pitch = 0.0004;
 		int n_u = thisModInfo.nstripsuv[0];
 		int n_v = thisModInfo.nstripsuv[1];
 
@@ -891,18 +839,450 @@ int exportPDF(TCanvas * C){
 }
 
 
+void drawAPV_TOPDOWN(apvInfoKeys APVinfo){
+
+	// if(strip_num%20==0){//Testing with greater	plotted spacing for visibility
+		// if(strip_num){//Testing with greater	plotted spacing for visibility
+	auto modNum = APVinfo.gemid;
+	auto& modInfo = gemInfoMap[modNum];
+	auto axis = APVinfo.axis;
+
+	// int nAPVs = GetNAPVs(modNum)[axis];
+	int nAPVs = modInfo.nstripsuv[axis]/128;
+	
+	// std::cout << "\nModNum: " << APVinfo.gemid
+	// << ", axis " << axis
+	// << ", pos " << APVinfo.pos
+	// << ", nAPVs " << nAPVs
+	// << std::endl;
+
+	double mod_x = modInfo.position[0];
+	double mod_y = modInfo.position[1];
+	double mod_size_x = modInfo.size[0];
+	double mod_size_y = modInfo.size[1];
+	// double angle = modInfo.uvangles[axis] * TMath::DegToRad();
+
+
+	double apvPos;
+
+	// if (axis == 0) {
+	// 	apvPos = (mod_x-mod_size_x / 2.0) //top of mod
+	// 	- getOffset(APVinfo.gemid, axis)
+	// 	+(APVinfo.pos)*128*0.0004;
+	
+	// }
+	// else if (axis == 1){
+	// apvPos = (mod_x+mod_size_x / 2.0) //top of mod
+	// -getOffset(APVinfo.gemid, axis)
+	// -APVinfo.pos*128*0.0004;
+	// }
+
+	int topAPV=nAPVs-1;
+
+	int centerAPV = topAPV/2.0;
+	
+
+	int APVchanPos =APVinfo.pos;
+
+	
+
+	// double APVoffsetPos = //offset form top of module
+	
+	
+
+
+
+	// double APVoffsetPos = //offset form top of module
+	// topAPV - APVchanPos //counting from 0
+	// -nAPVs/2.0; //translate to center of module
+	// APVchanPos //counting from 0
+	// -nAPVs/2.0; //translate to center of module
+
+	// int APVoffsetPos = ((nAPVs/2-1))-APVchanPos;
+	// int APVoffsetTop = ((nAPVs/2-1))-APVchanPos; //delta from top of module
+	// // APVchanPos = APVoffsetPos;
+
+	// ;
+
+	double APVposOffset = 0.0;
+	;
+	
+
+
+	double edgePos;
+	
+	if (modNum<6){
+
+		// edgePos = -edgePos;//count top to bottom???
+
+		if (modNum==0){// so v is on right 
+			if (axis == 1) {edgePos = mod_size_y / 2.0; 
+			}
+			else if (axis == 0) {edgePos = -mod_size_y / 2.0;
+		}
+		else if(modNum>0 && modNum<6){
+			if (axis == 0) {edgePos = mod_size_y / 2.0; 
+			}
+			else if (axis == 1) {edgePos = -mod_size_y / 2.0;
+			}}
+
+		//if need can say 1/2 on left and 1/2 on right
+		
+
+
+		APVposOffset = mod_size_x / 2.0 //physical dist
+		- (APVchanPos*128*0.0004) //counting from 0
+		;
+
+		apvPos = mod_x + APVposOffset //top of mod
+		- getOffset(APVinfo.gemid, axis)
+		;
+
+		std::cout << "\nAPVchanPos " << APVchanPos << std::endl;
+		std::cout << "nAPVs " << nAPVs << std::endl;
+		std::cout << "\nAPVpos " << apvPos << std::endl;
+		std::cout << "axis " << axis << std::endl;
+		std::cout << "\nAPVposOffset " << APVposOffset << std::endl;
+		std::cout << "\nedgePos " << edgePos << std::endl;
+		std::cout << "Mod num" << modNum << std::endl;
+
+
+	}
+	
+
+	else if (modNum>=6) { 
+
+		if (axis==1){//just flipping names for ease of input
+		// if (axis==0){  //top of mod
+			
+			apvPos = (mod_y - mod_size_y / 2.0)
+			+((APVchanPos)*128*0.0004);
+
+			edgePos = (mod_x+mod_size_x / 2.0) //right edge of mod
+			;
+
+		}
+
+		else if (axis==0){
+
+			// (mod_x+mod_size_x / 2.0) //top of mod
+			// -(APVchanPos)*128*0.0004;
+			//top of mod
+			edgePos = mod_x
+			+(APVchanPos*128*0.0004)
+			-(mod_size_x / 2.0);
+
+			apvPos = mod_y+mod_size_y/ 2.0;
+			// apvPos = mod_x+mod_size_x/ 2.0;
+		}
+		
+	// apvPos = -apvPos;//count top to bottom
+	}
+	
+	//TODO: check if this is correct 
+	
+	
+	
+	if (modNum < 6) {
+		std::cout << "\nAngle " << modInfo.uvangles[axis] << std::endl;
+	
+
+	std::cout  << "\nModNum: " << APVinfo.gemid<< std::endl;
+	std::cout << "\nAPV pos " << apvPos << std::endl;
+	std::cout << "edgePos " << edgePos << std::endl;
+	std::cout << "mod_x " << mod_x << std::endl;
+	std::cout << "mod_y " << mod_y << std::endl;
+
+	std::cout << "\nModNum: " << APVinfo.gemid
+	<< ", axis " << axis
+	<< ", pos " << APVinfo.pos
+	<< ", nStrips " << modInfo.nstripsuv[axis]
+	<< ", nAPVs " << nAPVs
+	<< ", offset" << getOffset(APVinfo.gemid, axis)
+	<< std::endl;
+
+	}
+
+
+	// apvPos = //count up in + of axes proj on x,y
+	// (mod_x-mod_size_x / 2.0) //bottom of mod
+	// -getOffset(APVinfo.gemid, axis)//b/c given positive in db
+	// +(APVinfo.pos)*128*0.0004 //count up in + of axes proj on x,y
+	// ;
+
+
+	// apvPos += 128*0.0004/2.0; //center of APV
+
+	TMarker* APVmark;
+
+
+	//-!!! b/c flips!
+
+
+	if (modNum>5){
+	APVmark = new TMarker(-apvPos, edgePos, 21);
+	}
+	else if (modNum<6){
+
+	APVmark = new TMarker(-edgePos, apvPos, 21);
+		// -edgePos, -apvPos, 21);
+	}
+	APVmark->SetMarkerStyle(36);
+
+	if (axis == 0) {
+		APVmark->SetMarkerColor(kCyan);
+	} else {
+		// V
+		APVmark->SetMarkerColor(kPink);
+	}
+	
+	// APVmark->SetMarkerSize(0.3);
+	APVmark->SetMarkerSize(1.3);
+	APVmark->Draw("same");
+	// }
+	
+}
+
+}
+
+
+
+
+void drawAPV(apvInfoKeys APVinfo){
+
+	auto modNum = APVinfo.gemid;
+	auto& modInfo = gemInfoMap[modNum];
+	auto axis = APVinfo.axis;
+
+	// int nAPVs = GetNAPVs(modNum)[axis];
+	int nAPVs = modInfo.nstripsuv[axis]/128;
+	double mod_x = modInfo.position[0];
+	double mod_y = modInfo.position[1];
+	double mod_size_x = modInfo.size[0];
+	double mod_size_y = modInfo.size[1];
+
+
+	double apvPos;
+
+
+	int topAPV=nAPVs-1;
+
+	int centerAPV = topAPV/2.0;
+	
+
+	int APVchanPos =APVinfo.pos;
+
+
+	// int APVchanOffset = -nAPVs + APVchanPos;
+	// int APVchanOffset = nAPVs - APVchanPos;
+	int APVchanOffset = topAPV - APVchanPos;
+	// int APVchanOffset = -topAPV + APVchanPos;
+
+	//now can go from bottom up of mod up
+	// APVchanOffset = - APVchanOffset ;
+
+	
+
+	double APVposOffset = 0.0;
+	
+
+	double edgePos;
+	
+	if (modNum<6){
+
+		// edgePos = -edgePos;//count top to bottom???
+
+		if (modNum==0){// so v is on right 
+			if (axis == 1) {edgePos = mod_size_y / 2.0; 
+			}
+			else if (axis == 0) {edgePos = -mod_size_y / 2.0;
+			}
+		}
+		else if(modNum>0 && modNum<6){
+			if (axis == 0) {edgePos = mod_size_y / 2.0; 
+			}
+			else if (axis == 1) {edgePos = -mod_size_y / 2.0;
+			}}
+
+		//if need can say 1/2 on left and 1/2 on right
+
+
+		// edgePos= - edgePos;//try this then flip xy
+		
+
+
+		APVposOffset = 
+		// -(APVchanPos*128*0.0004) //counting from 0
+		// -(APVchanOffset*128*.0004)	
+
+		+(
+			(APVchanPos)*128
+			// +64
+		)
+		*0.0004
+		-mod_size_x / 2.0
+		// +(APVchanOffset*128*.0004)	
+		;
+
+		apvPos = + mod_x- getOffset(APVinfo.gemid, axis)
+		// mod_size_x / 2.0 //physical dist
+		
+		// -mod_size_x / 2.0 //physical dist
+		-APVposOffset //top of mod
+		
+		;
+
+		// apvPos=-apvPos;
+
+		
+		std::cout << "\nAPVchanPos " << APVchanPos << std::endl;
+		std::cout << "APV offset(index from top) " << APVchanOffset << std::endl;
+		std::cout << "nAPVs " << nAPVs << std::endl;
+		std::cout << "\nAPVpos " << apvPos << std::endl;
+		std::cout << "centerAPV " << centerAPV << std::endl;
+		std::cout << "axis " << axis << std::endl;
+		std::cout << "\nAPVposOffset " << APVposOffset << std::endl;
+		std::cout << "\nedgePos " << edgePos << std::endl;
+		std::cout << "Mod num" << modNum << std::endl;
+
+		std::cout << "(center index)*128*0.0004=" << (centerAPV)*128*0.0004 << std::endl;
+		std::cout << "(APVchanPos)*128*0.0004=" << (APVchanPos)*128*0.0004 << std::endl;
+		std::cout << "APVchanOffset*128*.0004=" << APVchanOffset*128*.0004 << std::endl;
+
+
+		std::cout << "mod size x = " << mod_size_x << std::endl;
+		std::cout << "nAPVs*128*pitch = " << nAPVs*(128)*.0004 << std::endl;
+
+
+	}
+	
+
+	else if (modNum>=6) { 
+
+		if (axis==1){//just flipping names for ease of input
+			apvPos = (mod_y - mod_size_y / 2.0)
+			+((APVchanPos)*128*0.0004);
+
+			edgePos = (mod_x+mod_size_x / 2.0); //right edge of mod
+			
+
+		}
+		else if (axis==0){
+			edgePos = mod_x
+			+(APVchanPos*128*0.0004)
+			-(mod_size_x / 2.0);
+
+			apvPos = mod_y+mod_size_y/ 2.0;
+		}
+		
+	// apvPos = -apvPos;//count top to bottom
+	}
+	
+	//TODO: check if this is correct 
+	
+	
+	
+	if (modNum < 6) {//Print info
+		std::cout << "\nAngle " << modInfo.uvangles[axis] << std::endl;
+	
+	std::cout  << "\nModNum: " << APVinfo.gemid<< std::endl;
+	std::cout << "\nAPV pos " << apvPos << std::endl;
+	std::cout << "edgePos " << edgePos << std::endl;
+	std::cout << "mod_x " << mod_x << std::endl;
+	std::cout << "mod_y " << mod_y << std::endl;
+
+	std::cout << "\nModNum: " << APVinfo.gemid
+	<< ", axis " << axis
+	<< ", pos " << APVinfo.pos
+	<< ", nStrips " << modInfo.nstripsuv[axis]
+	<< ", nAPVs " << nAPVs
+	<< ", offset" << getOffset(APVinfo.gemid, axis)
+	<< std::endl;
+
+	}
 
 
 
 
 
-// showAPVs_for_ecalbin(int ecalBinNum, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod) {
-//     // showAPVs_for_ecalbin(ecalBinNum, StripsPerMod);
-//     std::cout << "showAPVs_for_ecalbin() called" << std::endl;
-//     return 0;
-// }
+	// apvPos += 128*0.0004/2.0; //center of APV
 
-// //NOTE: want n/2 to have edges of APVs at 1st and last strip
+	TMarker* APVmark;
+
+	if (modNum>5){
+	APVmark = new TMarker(-apvPos, edgePos, 21);
+	}
+	else if (modNum<6){
+
+	APVmark = new TMarker(edgePos, apvPos, 21);
+		// -edgePos, -apvPos, 21);
+	}
+	APVmark->SetMarkerStyle(36);
+
+	if (axis == 0) {
+		APVmark->SetMarkerColor(kCyan);
+	} else {
+		// V
+		APVmark->SetMarkerColor(kPink);
+	}
+	
+	// APVmark->SetMarkerSize(0.3);
+	APVmark->SetMarkerSize(1.3);
+	APVmark->Draw("same");
+	// }
+	
+}
+
+
+
+
+void showAPVs_for_ecalbin(
+	TCanvas * C,
+	int ecalBinNum, 
+	std::set<apvInfoKeys> binAPVkeysByModule
+	) {
+    // showAPVs_for_ecalbin(ecalBinNum, StripsPerMod);
+    std::cout << "showAPVs_for_ecalbin() called" << std::endl;
+
+	
+	
+	
+	for (auto & key : binAPVkeysByModule) {
+		int mod = key.gemid;
+		std::cout << "\nModule " << key.gemid
+		<< ", axis " << key.axis
+		<< ", pos " << key.pos << std::endl;
+		std::cout << std::endl;
+
+		int layer = -1;
+		if (mod <= 5) layer = mod;
+		else if (mod <= 9) layer = 6;
+		else if (mod <= 13) layer = 7;
+		if (layer < 0) continue;
+
+		std::cout << "\n Layer is " << layer << std::endl;
+
+
+		TPad* pad = (TPad*) C->cd(layer + 1);//so can name layer 1, 2...
+		std::cout << "\nChanging to subpad(layer plot) Named " << pad->GetName() <<std::endl;
+		std::cout << "\nChanging to subpad(layer plot) Numbererd " << pad->GetNumber() <<std::endl;
+		std::cout << "\nChanging to Canvas " << pad->GetCanvasID() <<std::endl;
+
+		pad->cd();  
+
+		drawAPV(key);
+
+		// if (key== binAPVkeysByModule.){}
+
+	}
+	
+	C->Update();
+
+}
+
+
+
+//NOTE: want n/2 to have edges of APVs at 1st and last strip
 // if (stripNum%(numStrips/2))
 
 
@@ -923,6 +1303,9 @@ int showGEM_APVs_for_ecalbin(const std::string& db_local = "db_FT_local.dat", co
 
 		return -1;
 	}
+
+	// auto refAPVMap = db.returnAPVInfoMap();
+	auto refAPVMap = apvInfoMap;
 
 
 	//NOTE: start "cataloging"
@@ -956,46 +1339,154 @@ int showGEM_APVs_for_ecalbin(const std::string& db_local = "db_FT_local.dat", co
 	 std::pair< std::set<int> /*setOfUstripsForModule*/, std::set<int> /*SetofVstripsforMOdule*/> > > map_physicalUVStrips_byECalBin_byGEMMod;
 
 
+	 
+	 //RREDITS:******
+	 std::map < int /*ECalBinNo*/, std::set<apvInfoVals>> ECalBinAPVvals;
+	 std::set<struct apvInfoKeys> missingKeys;
+
+	//NOTE:Dont need Mod Num b/c it is in the key of the map
+	 std::map<int /*ECalBinNo*/, std::set<apvInfoKeys>> ECalBinAPVkeys;
+
+
 	for ( auto& [binNum, map_ROIbyLayer_forThisBin] : map_ROIsByBinsAndLayers )
 	{
-		std::map <int, std::pair < std::set<int>, std::set<int> >> map_allUVstripsSetsForAllModules_forThisECalBin;
+		std::map <int, 
+			std::pair < std::set<int>, /*setOfUstripsForModule*/
+			std::set<int> /*setOfVstripsForModule*/
+			>
+		> map_allUVstripsSetsForAllModules_forThisECalBin;
 
 		//std::cout << "***Filling bin: " << binNum << std::endl;
+
+		//RREDIT:Start
+		std::set<apvInfoKeys> currECalBinAPV_Keys;
+
+		std::set<apvInfoVals>currECalbinAPV_Vals; 
 		
+		//NOTE: dont need Mod Num b/c it is in the key of the map
+		// std::set<apvInfoVals> currECalbinAPV_Info; 
+
+		//RREDIT:End
 		
 		
 
 		for ( auto& [layerNum, gemLayerROItoStripsInstance] : map_GEMLayerROItoStrips )
 		{	
-			
-			std::map <int, std::pair < std::set<int>, std::set<int> >> map_thisLayer_allROIsForAllModules_forThisECalBin = gemLayerROItoStripsInstance.takeROI_givePhysicalUVStrips( /*map_ROIbyLayer_forThisBin.at( layerNum )*/ (map_ROIsByBinsAndLayers.at(binNum).at(layerNum)) );
+			std::map <int, /*ModNum*/
+				std::pair < 
+					std::set<int>, /*setOfUstripsForModule*/
+					std::set<int> /*setOfUstripsForModule*/
+				>
+			> CurrLayer_ROI_UVstrips_perMod_forCurrECalBin 
+
+			= gemLayerROItoStripsInstance.takeROI_givePhysicalUVStrips( /*map_ROIbyLayer_forThisBin.at( layerNum )*/ (map_ROIsByBinsAndLayers.at(binNum).at(layerNum)) );
 			
 			//std::cout << "Layer Num: " << layerNum << "  Numer of ROI modules: " << map_thisLayer_allROIsForAllModules_forThisECalBin.size() << std::endl;
 			
-			for (const auto& [modNum, modUVstripPair] : map_thisLayer_allROIsForAllModules_forThisECalBin) 
+			for (const auto& [modNum, modUVstripPair] : CurrLayer_ROI_UVstrips_perMod_forCurrECalBin) 
 			{
 				// If key doesn't exist in finalMap, insert it
 			    if (map_allUVstripsSetsForAllModules_forThisECalBin.find(modNum) == map_allUVstripsSetsForAllModules_forThisECalBin.end())
 			    {
 			    	map_allUVstripsSetsForAllModules_forThisECalBin[modNum] = modUVstripPair;
 			    } 
+			
+				{map_physicalUVStrips_byECalBin_byGEMMod[binNum] = map_allUVstripsSetsForAllModules_forThisECalBin;}
+
+
+				// RREDIT:Start
+				std::set<int>uStrips = modUVstripPair.first;
+				std::set<int>vStrips = modUVstripPair.second;
+				//RREDIT:END
+
+				// std::set <int, std::set<apvInfoVals> > currModAPV_Keys;
+
+				for (int stripID : uStrips){
+					apvInfoKeys currStripKeys;
+					currStripKeys.gemid = modNum;
+					currStripKeys.axis = 0;
+
+
+					currStripKeys.pos = stripID/128;//APV position
+
+					// posInAPV = stripID%128;
+
+					// std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
+					// << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
+
+					if (refAPVMap.find(currStripKeys) == refAPVMap.end()) {
+						std::cout << "\nFor ECal Bin " << binNum <<" For strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
+						currStripKeys.pos << " NOT FOUND!\n" << std::endl;
+						missingKeys.emplace(currStripKeys);
+					}
+
+
+					if (refAPVMap.find(currStripKeys) != refAPVMap.end()) {
+						currECalbinAPV_Vals.emplace(refAPVMap[currStripKeys]);  // Store unique strip -> APV mapping
+						currECalBinAPV_Keys.emplace(currStripKeys);
+						// currModAPV_Keys.emplace(currStripKeys);
+
+					}
+
+				}
+
+				; 
+				for (int stripID : vStrips){
+					struct apvInfoKeys currStripKeys;
+					currStripKeys.gemid = modNum;
+					currStripKeys.axis = 1;
+					
+
+
+					currStripKeys.pos = (stripID/128);//APV position(-1 so index starts at 0)
+					// posInAPV = stripID%128;
+
+					// std::cout << "ECalBin: " << binNum << " Checking modID: " << modNum << " Strip: " << stripID 
+					// << " Axis: " << currStripKeys.axis << " Pos: " << currStripKeys.pos << std::endl;
+					
+					if (refAPVMap.find(currStripKeys) == refAPVMap.end()) {
+						std::cout << "\nFor ECal Bin " << binNum <<" For strip " << stripID  << "  --> APV key: " << currStripKeys.gemid <<", "<< currStripKeys.axis <<", "<<
+						currStripKeys.pos << " NOT FOUND!\n" << std::endl;
+						missingKeys.emplace(currStripKeys);
+					}	
+
+
+				if (refAPVMap.find(currStripKeys) != refAPVMap.end()) {
+					currECalbinAPV_Vals.emplace(refAPVMap[currStripKeys]);  // Store unique strip -> APV mapping
+					
+					currECalBinAPV_Keys.emplace(currStripKeys);
+					// currModAPV_Keys.emplace(currStripKeys);
+
+					}
+
+				}
+
+				// currECalBinAPVs.emplace(modNum, currModAPVs);
+				// currECalBinAPV_Keys.emplace(currModAPV_Keys);
+				
+				//RREDITS:End
 		
-			}
+
+			}	
+
 
 		map_physicalUVStrips_byECalBin_byGEMMod[binNum] = map_allUVstripsSetsForAllModules_forThisECalBin;
 
-// 		std::cout << "For bin " << binNum << " collected modules:\n";
-// for (const auto& [modNum, modUVstripPair] : map_allUVstripsSetsForAllModules_forThisECalBin) {
-//     std::cout << "Module " << modNum 
-//               << " has U strips: " << modUVstripPair.first.size()
-//               << ", V strips: " << modUVstripPair.second.size() << std::endl;
-// }
-
-
 		}
+
+		ECalBinAPVvals[binNum] = currECalbinAPV_Vals;//RREDIT
+
+		ECalBinAPVkeys[binNum] = currECalBinAPV_Keys;
+
 	}
 	
-	
+
+
+
+
+
+
+
 	std::string usrinput;
 	std::cout << "Enter ECal bin numbers to visualize separated by spaces, 'Return' to visualize all ECalBins or 'q' to quit: ";
 	std::getline(std::cin, usrinput);
@@ -1058,11 +1549,13 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 	if (all_bins_mode) {
 		std::cout << "\n### ALL BINS MODE ###" << std::endl;
 
+		TCanvas* canvas;
+
 		for (const auto& [binNum, uvStripSetbyModule] : map_physicalUVStrips_byECalBin_byGEMMod) {
 			std::cout << "\n### BIN NUMBER: " << binNum << " ###" << std::endl;
 			std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
 
-			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, map_ROIsByBinsAndLayers[binNum], uvStripSetbyModule);
+			canvas = showgemstrips_for_ecalbin(binNum, map_ROIsByBinsAndLayers[binNum], uvStripSetbyModule);
 
 			if (!canvas) {
 				std::cerr << "Error: canvas is null for bin " << binNum << "!" << std::endl;
@@ -1073,6 +1566,17 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			canvas->Draw();
 			gSystem->ProcessEvents();
 		}
+
+		
+		for (const auto& [binNum, keys] : ECalBinAPVkeys){
+
+			showAPVs_for_ecalbin(canvas, binNum, keys);
+
+			showAPVs_for_ecalbin(canvas, binNum, ECalBinAPVkeys[binNum]);
+
+
+		}
+
 	} else {
 		std::cout << "\n### SELECTED BINS MODE ###" << std::endl;
 
@@ -1088,7 +1592,11 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			std::cout << "Number of Modules " << uvStripSetbyModule.size() << std::endl;
 
 			TCanvas* canvas = showgemstrips_for_ecalbin(binNum, map_ROIsByBinsAndLayers[binNum], uvStripSetbyModule);
+			
+			showAPVs_for_ecalbin(canvas, binNum, ECalBinAPVkeys[binNum]); 
 
+
+			
 			if (!canvas) {
 				std::cerr << "Error: canvas is null for bin " << binNum << "!" << std::endl;
 				continue;
