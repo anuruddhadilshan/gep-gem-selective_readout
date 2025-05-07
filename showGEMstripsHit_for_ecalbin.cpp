@@ -424,43 +424,43 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 		// latex->SetTextSize(0.05);
 		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
 
-		if (binROI.find(layer) != binROI.end()) {
-			const ROI& roi = binROI.at(layer);
+		// if (binROI.find(layer) != binROI.end()) {
+		// 	const ROI& roi = binROI.at(layer);
 		
-			double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
-			double xMaxROI = roi.yMax;
-			double yMinROI = roi.xMin;
-			double yMaxROI = roi.xMax;
+		// 	double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
+		// 	double xMaxROI = roi.yMax;
+		// 	double yMinROI = roi.xMin;
+		// 	double yMaxROI = roi.xMax;
 
-			// //xy already in GEM coords?
-			// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
-			// double xMaxROI = roi.xMax;
-			// double yMinROI = roi.yMin;
-			// double yMaxROI = roi.yMax;
+		// 	// //xy already in GEM coords?
+		// 	// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
+		// 	// double xMaxROI = roi.xMax;
+		// 	// double yMinROI = roi.yMin;
+		// 	// double yMaxROI = roi.yMax;
 
-			std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
-			<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
+		// 	std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
+		// 	<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
 		
-			TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
-			TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
-			TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
-			TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
+		// 	TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
+		// 	TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
+		// 	TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
+		// 	TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
 		
-			roi_left->SetLineColor(kGreen);
-			roi_right->SetLineColor(kGreen);
-			roi_top->SetLineColor(kGreen);
-			roi_bottom->SetLineColor(kGreen);
+		// 	roi_left->SetLineColor(kGreen);
+		// 	roi_right->SetLineColor(kGreen);
+		// 	roi_top->SetLineColor(kGreen);
+		// 	roi_bottom->SetLineColor(kGreen);
 		
-			roi_left->SetLineWidth(2);
-			roi_right->SetLineWidth(2);
-			roi_top->SetLineWidth(2);
-			roi_bottom->SetLineWidth(2);
+		// 	roi_left->SetLineWidth(2);
+		// 	roi_right->SetLineWidth(2);
+		// 	roi_top->SetLineWidth(2);
+		// 	roi_bottom->SetLineWidth(2);
 		
-			roi_left->Draw("same");
-			roi_right->Draw("same");
-			roi_top->Draw("same");
-			roi_bottom->Draw("same");
-		}
+		// 	roi_left->Draw("same");
+		// 	roi_right->Draw("same");
+		// 	roi_top->Draw("same");
+		// 	roi_bottom->Draw("same");
+		// }
 
 	}
 
@@ -612,6 +612,45 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 
 		uStripLoopCalls=0;
 		vStripLoopCalls=0;
+
+	
+		if (binROI.find(layer) != binROI.end()) {
+			const ROI& roi = binROI.at(layer);
+		
+			double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
+			double xMaxROI = roi.yMax;
+			double yMinROI = roi.xMin;
+			double yMaxROI = roi.xMax;
+
+			// //xy already in GEM coords?
+			// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
+			// double xMaxROI = roi.xMax;
+			// double yMinROI = roi.yMin;
+			// double yMaxROI = roi.yMax;
+
+			std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
+			<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
+		
+			TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
+			TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
+			TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
+			TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
+		
+			roi_left->SetLineColor(kP6Violet);
+			roi_right->SetLineColor(kP6Violet);
+			roi_top->SetLineColor(kP6Violet);
+			roi_bottom->SetLineColor(kP6Violet);
+		
+			roi_left->SetLineWidth(2);
+			roi_right->SetLineWidth(2);
+			roi_top->SetLineWidth(2);
+			roi_bottom->SetLineWidth(2);
+		
+			roi_left->Draw("same");
+			roi_right->Draw("same");
+			roi_top->Draw("same");
+			roi_bottom->Draw("same");
+		}
 
 
 		// TLatex* latex = new TLatex();
