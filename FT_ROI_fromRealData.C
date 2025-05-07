@@ -268,6 +268,30 @@ void writeROIToFile(const std::vector<std::vector<ROI>>& vvROI, const std::strin
     std::cout << "ROI data successfully written to " << filename << std::endl;
 }
 
+//vtpcrate, fiber, adc_ch
+struct apvInfoVals{
+	//fill these values they id the APV
+	int vtpcrate;
+	int fiber; //NOTE: == mpd_id
+	int adc_ch;
+	// int invert;
+
+	bool operator<(const apvInfoVals& other) const {
+        if (vtpcrate != other.vtpcrate) return vtpcrate < other.vtpcrate;
+        if (fiber != other.fiber) return fiber < other.fiber;
+        return adc_ch < other.adc_ch;
+    }
+
+    void print() const {
+        std::cout << "VTPcrate: " << vtpcrate 
+                  << " Fiber: " << fiber 
+                  << " ADC_ch: " << adc_ch 
+                  << std::endl; 
+	}
+};
+
+
+
 constexpr int max_NECalClus {100};
 constexpr int max_NGEMhits {10000};
 
@@ -482,11 +506,22 @@ void FT_ROI_fromRealData()
 		canvas_perecalbin[i_can]->cd();
 		canvas_perecalbin[i_can]->Update();
 
-		if ( i_can == 0 ) canvas_perecalbin[i_can]->Print("realdat_GEP1_test.pdf(");
-		else if ( i_can == n_ecalbins - 1 ) canvas_perecalbin[i_can]->Print("realdat_GEP1_test.pdf)");
-		else canvas_perecalbin[i_can]->Print("realdat_GEP1_test.pdf");
+		if ( i_can == 0 ) canvas_perecalbin[i_can]->Print("realdat_GEP1.pdf(");
+		else if ( i_can == n_ecalbins - 1 ) canvas_perecalbin[i_can]->Print("realdat_GEP1.pdf)");
+		else canvas_perecalbin[i_can]->Print("realdat_GEP1.pdf");
 	}
 
 	writeROIToFile( vvROI, "ROI_GEP1_FT_realdat.txt" );
+
+
+	// Now let's see what VTP, MPD, and ADC are getting hits within these ROIs for each ECal bin.
+	std::map < int /*ECalBinNo*/, std::set<apvInfoVals>> ECalBinAPVinfo;
+
+	C->SetBranchStatus("*", 0);
+	C->SetBranchStatus("sbs.gemFT.hit.trackindex", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.crate_U", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.mod_U", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.adc_id_U", 1);
+	
 
 }
