@@ -1,25 +1,37 @@
+/*
+* Visualizes the active GEM U/V strips for one or more ECal bins by plotting
+ * the corresponding Region of Interest (ROI) strips per GEM module layer.
+ * 
+ * The code reads in a static local GEM database and an ROI definition file,
+ * then maps the physical strip numbers per GEM module. Each selected ECal bin
+ * is rendered as a multipanel ROOT canvas with strip overlays, module geometry,
+ * and ROI boxes for each GEM layer.
+ * 
+ * Use interactively or export the visualizations to PDF.
+ *
+ * Rafael Ruiz
+*/
+
 #include <TMath.h>
 #include <TLine.h>
-#include <TString.h>
 #include <TH2I.h>
 #include <TCanvas.h>
 #include <TMarker.h>
-#include <TRandom.h>
-
-
 #include <TLatex.h>
 
 #include <map>
 #include <set>
 #include <string>
 #include <iostream>
-
 #include <fstream>
 
 #include "GEMModROItoStrips.h"
 #include "DBread.h"
 #include "ROIread.h"
-#include "showgemhit_for_ecalbin.C"
+
+// #include <TString.h>
+// #include <TRandom.h>
+// #include "showgemhit_for_ecalbin.C"
 
 
 #include "GetGemInfoMap.cxx"
