@@ -182,7 +182,6 @@ m12.position 0.256  0    0.897
 m13.position 0.765  0    0.865
 
 
-
 #apvInfoMap, the struct used to obtain the VTP defining values in many scrips actually maps key and value structs to eachother
 ## the apvInfoKeys consists of: module id, axis(U/V depending on map), and  pos(along axis)
 ## the apvInfoVals consists of: VTPcrate, Fiber(MPD) ID, and  the ADC channel
@@ -720,4 +719,4 @@ GEMId     Axis      Pos       VTPcrate  Fiber     ADC_ch
 13        1         8         24        3         3         
 13        1         9         24        3         2         
 13        1         10        24        3         1         
-13        1         11        24        3         0         
+13        1         11        24        3         0
