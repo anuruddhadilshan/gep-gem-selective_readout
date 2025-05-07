@@ -2,7 +2,7 @@
 ## the apvInfoKeys consists of: module id, axis(U/V depending on map), and  pos(along axis)
 ## the apvInfoVals consists of: VTPcrate, Fiber(MPD) ID, and  the ADC channel
 
-GEMId     Axis      Pos       VTPcrate  Fiber     ADC_ch    
+(GEMId     Axis      Pos       VTPcrate  Fiber     ADC_ch    )
 ------------------------------------------------------------
 0         0         0         58        0         0         
 0         0         1         58        0         1         

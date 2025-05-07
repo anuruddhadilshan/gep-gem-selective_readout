@@ -250,9 +250,9 @@ void fillGEMInfoMap(){
   
   // Function to write `apvInfoMap` to a file
   void OutputGEMinfoMap() {
-    std::ofstream mapFile("gemFT_Map_TEST.txt");
+    std::ofstream mapFile("gemFT_Mod_Info.txt");
     if (!mapFile.is_open()) {
-        std::cerr << "Error: Could not create file gemFT_Map_TEST.txt\n";
+        std::cerr << "Error: Could not create file gemFT_Mod_Info.txt\n";
         return;
     }
   
@@ -293,7 +293,8 @@ void fillGEMInfoMap(){
         << "\n";
     }
   
-    std::cout << "Parsed data written to gemFT_Map_TEST.txt\n";
+    // std::cout << "Parsed data written to gemFT_Map_TEST.txt\n";
+    std::cout << "Parsed data written to gemFT_Mod_Info.txt\n";
   }
   
     
