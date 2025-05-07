@@ -664,10 +664,14 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 			TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
 			TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
 		
-			roi_left->SetLineColor(kP6Violet);
-			roi_right->SetLineColor(kP6Violet);
-			roi_top->SetLineColor(kP6Violet);
-			roi_bottom->SetLineColor(kP6Violet);
+			roi_left->SetLineColor(1);
+			roi_right->SetLineColor(1);
+			roi_top->SetLineColor(1);
+			roi_bottom->SetLineColor(1);
+			// roi_left->SetLineColor(kP6Violet);
+			// roi_right->SetLineColor(kP6Violet);
+			// roi_top->SetLineColor(kP6Violet);
+			// roi_bottom->SetLineColor(kP6Violet);
 		
 			roi_left->SetLineWidth(2);
 			roi_right->SetLineWidth(2);
