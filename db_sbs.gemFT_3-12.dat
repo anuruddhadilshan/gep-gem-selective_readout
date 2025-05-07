@@ -112,35 +112,6 @@ sbs.gemFT.m11.angle =     0     0     0
 sbs.gemFT.m12.angle =     0     0     0
 sbs.gemFT.m13.angle =     0     0     0
 
-# Latest alignment from cosmic data run 1393
-sbs.gemFT.m0.position =               0               0               0
-sbs.gemFT.m0.angle =               0               0               0
-sbs.gemFT.m1.position =   -0.0009957384     0.001011903      0.06965553
-sbs.gemFT.m1.angle =      0.02845075      -0.0605504     -0.04546393
-sbs.gemFT.m2.position =    0.0001710436    -0.000459872       0.2034382
-sbs.gemFT.m2.angle =      0.07675341      -0.1198605       0.2436714
-sbs.gemFT.m3.position =     0.001376854     0.006269574        0.343046
-sbs.gemFT.m3.angle =     0.003201721      -0.1511166     -0.09843895
-sbs.gemFT.m4.position =      0.00141488    -0.001440673       0.4885649
-sbs.gemFT.m4.angle =     -0.05024306     -0.08227032       0.2524821
-sbs.gemFT.m5.position =     0.001402999     0.001422435        0.624839
-sbs.gemFT.m5.angle =      0.01876771       -0.159149     -0.03591341
-sbs.gemFT.m6.position =      -0.7697741    0.0004816672       0.7657572
-sbs.gemFT.m6.angle =     -0.02162895       0.1824937     -0.07683021
-sbs.gemFT.m7.position =      -0.2583919   -0.0001352208       0.7264019
-sbs.gemFT.m7.angle =      -0.1592125      -0.1302343    -0.004356149
-sbs.gemFT.m8.position =       0.2535148    -0.002791718       0.7682186
-sbs.gemFT.m8.angle =      0.04485771      -0.1661604      0.02558993
-sbs.gemFT.m9.position =       0.7642502    -0.001526375       0.7271737
-sbs.gemFT.m9.angle =     -0.04115922      -0.4187967     -0.02240447
-sbs.gemFT.m10.position =      -0.7706271     0.002215514       0.8912493
-sbs.gemFT.m10.angle =       0.2008096       0.2114526     -0.04727379
-sbs.gemFT.m11.position =      -0.2581545     0.001260525       0.8495369
-sbs.gemFT.m11.angle =     -0.05719233      -0.1824592       0.1344297
-sbs.gemFT.m12.position =       0.2513865    0.0001291689       0.8957765
-sbs.gemFT.m12.angle =       0.1399312      -0.1401556      0.04210143
-sbs.gemFT.m13.position =       0.7631527     4.82926e-05       0.8530853
-sbs.gemFT.m13.angle =      -0.1626235      -0.1949088    -0.003737309
 
 # Define module sizes. Set to nominal sizes.
 sbs.gemFT.m0.size = 1.5 0.4 0.001
@@ -547,7 +518,6 @@ sbs.gemFT.m2.chanmap =
      58      11      11     120      11       8       3       0       0 
      58      11      11     120      12      15      12       0       0 
      58      11      11     120      13      14      13       0       0 
-     58      11      11     120      14      13      14       0       0 
 
 #Front Layer (L3 - m0): UVAUV L3 (vtp3)
 ## vtpcrate  slot  fiber  gemid  adc_ch   i2c   pos     invert   axis 
@@ -1022,7 +992,7 @@ sbs.gemFT.trackchi2cut = 150
 #sbs.gemFT.gridbinwidthy = 0.02 #0.1
 #sbs.gemFT.gridedgetolerancex = 0.004 #0.02
 #sbs.gemFT.gridedgetolerancey = 0.004 #0.02
-#sbs.gemFT.trackchi2cut = 500 #3000.0 #500.0 #40 #3000.0
+#sbs.gemFT.trackchi2cut = 300 #3000.0 #500.0 #40 #3000.0
 
 sbs.gemFT.sigmahitpos = 0.0001
 sbs.gemFT.do_efficiencies = 1
@@ -1106,10 +1076,215 @@ sbs.gemFT.dump_geometry_info = 1
 # ###################### END TIME-DEPENDENT CLUSTERING PARAMETERS #############
 
 
----------[ 2025-04-01 00:00:00 ] # Cosmic Data Analysis
+
+---------[ 2024-11-06 00:00:00 ] # Cosmic Data Analysis
 sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1610.dat
 sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1610.dat
 
+---------[ 2025-01-31 00:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run647.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run647.dat
+
+sbs.gemFT.m0.position =               0               0               0
+sbs.gemFT.m0.angle =               0               0               0
+sbs.gemFT.m1.position =   -0.0008436755    0.0009539232      0.06975309
+sbs.gemFT.m1.angle =      0.08824137     -0.03297124     -0.04138409
+sbs.gemFT.m2.position =    0.0003104065    -0.000656989        0.203445
+sbs.gemFT.m2.angle =       0.1127062     -0.08139076        0.246825
+sbs.gemFT.m3.position =     0.001381425     0.006044097       0.3433876
+sbs.gemFT.m3.angle =       0.0489437      -0.1315038     -0.09922729
+sbs.gemFT.m4.position =     0.001472217    -0.001733144       0.4885645
+sbs.gemFT.m4.angle =     -0.01343875     -0.06600104       0.2468569
+sbs.gemFT.m5.position =     0.001503435     0.001098491       0.6245277
+sbs.gemFT.m5.angle =      0.02565955        -0.13428     -0.04785934
+sbs.gemFT.m6.position =      -0.7698734     0.001915694       0.7656186
+sbs.gemFT.m6.angle =     -0.02875682       0.1690202      -0.1154371
+sbs.gemFT.m7.position =      -0.2583325     0.001197362       0.7261945
+sbs.gemFT.m7.angle =      -0.1033693     -0.08331285      -0.0219412
+sbs.gemFT.m8.position =       0.2535473    -0.001625363       0.7681714
+sbs.gemFT.m8.angle =      0.05553922      -0.1773941      0.02102868
+sbs.gemFT.m9.position =       0.7642679   -0.0007868564       0.7285291
+sbs.gemFT.m9.angle =      -0.2419833      -0.8044419      -0.1138261
+sbs.gemFT.m10.position =      -0.7705928     0.001992548         0.89194
+sbs.gemFT.m10.angle =       0.1220223       0.4576639      -0.1238769
+sbs.gemFT.m11.position =      -0.2581448    0.0006484264       0.8495086
+sbs.gemFT.m11.angle =     -0.02295652      -0.2180179      0.09248354
+sbs.gemFT.m12.position =       0.2514656   -0.0006345478       0.8956643
+sbs.gemFT.m12.angle =      0.02732267      -0.2402396    0.0005344914
+sbs.gemFT.m13.position =        0.765126     0.002118285       0.8655325
+sbs.gemFT.m13.angle =          2.0085       -3.977551       0.8914648
+
+---------[ 2025-02-3 00:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run679.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run679.dat
+
+sbs.gemFT.m0.position =               0               0               0
+sbs.gemFT.m0.angle =               0               0               0
+sbs.gemFT.m1.position =   -0.0009063434    0.0009410312      0.06978462
+sbs.gemFT.m1.angle =      0.08127089      -0.0346656     -0.04401022
+sbs.gemFT.m2.position =    0.0002632677   -0.0006523525       0.2034948
+sbs.gemFT.m2.angle =       0.1094275     -0.08201244       0.2446774
+sbs.gemFT.m3.position =      0.00135914       0.0060656       0.3432893
+sbs.gemFT.m3.angle =      0.06569785      -0.1387956      -0.1006799
+sbs.gemFT.m4.position =     0.001430841    -0.001729122       0.4886667
+sbs.gemFT.m4.angle =     -0.00857765     -0.06517951       0.2455073
+sbs.gemFT.m5.position =     0.001455814     0.001066598       0.6246969
+sbs.gemFT.m5.angle =      0.02261928      -0.1384515     -0.05270425
+sbs.gemFT.m6.position =       -0.769878     0.002041196       0.7662983
+sbs.gemFT.m6.angle =      0.06960857       0.3350437      -0.1252416
+sbs.gemFT.m7.position =      -0.2583289     0.001143562       0.7262917
+sbs.gemFT.m7.angle =     -0.07852895     -0.05650117     -0.01537209
+sbs.gemFT.m8.position =       0.2535021    -0.001590731       0.7682564
+sbs.gemFT.m8.angle =      0.08739566      -0.2081161    -0.003521814
+sbs.gemFT.m9.position =       0.7642959   -0.0007314528       0.7287938
+sbs.gemFT.m9.angle =      -0.2006087      -0.8470781      -0.1010134
+sbs.gemFT.m10.position =      -0.7704774      0.00185262       0.8912717
+sbs.gemFT.m10.angle =       0.4309301       0.3782725       -0.077941
+sbs.gemFT.m11.position =      -0.2581483    0.0007306955       0.8495825
+sbs.gemFT.m11.angle =      0.01748848      -0.2555407       0.1113633
+sbs.gemFT.m12.position =       0.2512677   -0.0005235493       0.8959009
+sbs.gemFT.m12.angle =      0.08618213      -0.2885708    -0.008434703
+sbs.gemFT.m13.position =       0.7634073    -0.003259911       0.8592308
+sbs.gemFT.m13.angle =       -1.365353       -1.006356       -0.709706
+
+---------[ 2025-02-7 00:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run744.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run744.dat
 
 
-# ###################### END TIME-DEPENDENT PARAMETERS #############
+---------[ 2025-02-14 00:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run971.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run971.dat
+
+---------[ 2025-02-17 00:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1030.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1030.dat
+
+---------[ 2025-02-18 16:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1058.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1058.dat
+
+---------[ 2025-02-20 15:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1091.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1091.dat
+
+---------[ 2025-02-22 10:21:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1095.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1095.dat
+
+---------[ 2025-02-28 15:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1153.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1153.dat
+
+---------[ 2025-03-06 12:00:00 ] # Cosmic Data Analysis
+#Front Layer (L2 - m0): UVAUV L2 (vtp5)
+## vtpcrate  slot  fiber  gemid  adc_ch   i2c   pos     invert   axis 
+sbs.gemFT.m2.chanmap = 
+     58      11       8     120       0       3      29       1       1 
+     58      11       8     120       1       2      28       1       1 
+     58      11       8     120       2       1      27       1       1 
+     58      11       8     120       3       0      26       1       1 
+     58      11       8     120       4       7      25       1       1 
+     58      11       8     120       5       6      24       1       1 
+     58      11       8     120       6       5      23       1       1 
+     58      11       8     120       7       4      22       1       1 
+     58      11       8     120       8      11      21       1       1 
+     58      11       8     120       9      10      20       1       1 
+     58      11       8     120      10       9      19       1       1 
+     58      11       8     120      11       8      18       1       1 
+     58      11       8     120      12      14      17       1       1 
+     58      11       8     120      13      13      16       1       1 
+     58      11       8     120      14      12      15       1       1 
+     58      11       9     120       0       3      11       1       1 
+     58      11       9     120       1       2      10       1       1 
+     58      11       9     120       2       1       9       1       1 
+     58      11       9     120       3       0       8       1       1 
+     58      11       9     120       4       7       7       1       1 
+     58      11       9     120       5       6       6       1       1 
+     58      11       9     120       6       5       5       1       1 
+     58      11       9     120       7       4       4       1       1 
+     58      11       9     120       8      11       3       1       1 
+     58      11       9     120       9      10       2       1       1 
+     58      11       9     120      10       9       1       1       1 
+     58      11       9     120      11       8       0       1       1 
+     58      11       9     120      12      14      14       1       1 
+     58      11       9     120      13      13      13       1       1 
+     58      11       9     120      14      12      12       1       1 
+     58      11      10     120       0       3      26       0       0 
+     58      11      10     120       1       2      27       0       0 
+     58      11      10     120       2       1      28       0       0 
+     58      11      10     120       3       0      29       0       0 
+     58      11      10     120       4       7      22       0       0 
+     58      11      10     120       5       6      23       0       0 
+     58      11      10     120       6       5      24       0       0 
+     58      11      10     120       7       4      25       0       0 
+     58      11      10     120       8      11      18       0       0 
+     58      11      10     120       9      10      19       0       0 
+     58      11      10     120      10       9      20       0       0 
+     58      11      10     120      11       8      21       0       0 
+     58      11      10     120      12      15      15       0       0 
+     58      11      10     120      13      14      16       0       0 
+     58      11      10     120      14      13      17       0       0 
+     58      11      11     120       0       3       8       0       0 
+     58      11      11     120       1       2       9       0       0 
+     58      11      11     120       2       1      10       0       0 
+     58      11      11     120       3       0      11       0       0 
+     58      11      11     120       4       7       4       0       0 
+     58      11      11     120       5       6       5       0       0 
+     58      11      11     120       6       5       6       0       0 
+     58      11      11     120       7       4       7       0       0 
+     58      11      11     120       8      11       0       0       0 
+     58      11      11     120       9      10       1       0       0 
+     58      11      11     120      10       9       2       0       0 
+     58      11      11     120      11       8       3       0       0 
+     58      11      11     120      12      15      12       0       0 
+     58      11      11     120      13      14      13       0       0 
+     58      11      11     120      14      13      14       0       0 
+
+
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1253.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1253.dat
+
+---------[ 2025-03-10 18:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1285.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1285.dat
+
+sbs.gemFT.m0.position =               0               0               0
+sbs.gemFT.m0.angle =               0               0               0
+sbs.gemFT.m1.position =   -0.0009957384     0.001011903      0.06965553
+sbs.gemFT.m1.angle =      0.02845075      -0.0605504     -0.04546393
+sbs.gemFT.m2.position =    0.0001710436    -0.000459872       0.2034382
+sbs.gemFT.m2.angle =      0.07675341      -0.1198605       0.2436714
+sbs.gemFT.m3.position =     0.001376854     0.006269574        0.343046
+sbs.gemFT.m3.angle =     0.003201721      -0.1511166     -0.09843895
+sbs.gemFT.m4.position =      0.00141488    -0.001440673       0.4885649
+sbs.gemFT.m4.angle =     -0.05024306     -0.08227032       0.2524821
+sbs.gemFT.m5.position =     0.001402999     0.001422435        0.624839
+sbs.gemFT.m5.angle =      0.01876771       -0.159149     -0.03591341
+sbs.gemFT.m6.position =      -0.7697741    0.0004816672       0.7657572
+sbs.gemFT.m6.angle =     -0.02162895       0.1824937     -0.07683021
+sbs.gemFT.m7.position =      -0.2583919   -0.0001352208       0.7264019
+sbs.gemFT.m7.angle =      -0.1592125      -0.1302343    -0.004356149
+sbs.gemFT.m8.position =       0.2535148    -0.002791718       0.7682186
+sbs.gemFT.m8.angle =      0.04485771      -0.1661604      0.02558993
+sbs.gemFT.m9.position =       0.7642502    -0.001526375       0.7271737
+sbs.gemFT.m9.angle =     -0.04115922      -0.4187967     -0.02240447
+sbs.gemFT.m10.position =      -0.7706271     0.002215514       0.8912493
+sbs.gemFT.m10.angle =       0.2008096       0.2114526     -0.04727379
+sbs.gemFT.m11.position =      -0.2581545     0.001260525       0.8495369
+sbs.gemFT.m11.angle =     -0.05719233      -0.1824592       0.1344297
+sbs.gemFT.m12.position =       0.2513865    0.0001291689       0.8957765
+sbs.gemFT.m12.angle =       0.1399312      -0.1401556      0.04210143
+sbs.gemFT.m13.position =       0.7631527     4.82926e-05       0.8530853
+sbs.gemFT.m13.angle =      -0.1626235      -0.1949088    -0.003737309
+
+---------[ 2025-03-11 14:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1332.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1332.dat
+
+---------[ 2025-03-12 16:00:00 ] # Cosmic Data Analysis
+sbs.gemFT.pedfile = gemped/daq_ped_sbs_gemFT_run1383.dat
+sbs.gemFT.cmfile = gemped/db_cmr_sbs_gemFT_run1383.dat
+
+
+#########################################################

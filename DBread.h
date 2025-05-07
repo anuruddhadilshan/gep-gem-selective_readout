@@ -118,6 +118,8 @@ std::cout << "Parsed data written to APV_Map_TEST.txt\n";
 
 
 
+
+
 class DBread
 {
 
@@ -445,7 +447,10 @@ bool inAPVSection = false;  // Flag to detect APV map section
 	std::map< int, GEMLayer >& returnGEMLayerMap() { return m_GEMLayers; }
 
 
-
+	std::map <apvInfoKeys, apvInfoVals> GetAPVinfoMap(){
+		
+		return apvInfoMap;
+	}
+	
 };
-
 #endif

@@ -80,10 +80,11 @@ double getOffset(int mod, int axis) {
 
 
 int uDrawn=0, vDrawn=0;
+int uAPVs=0, vAPVs=0;
 
 
 
-void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
+void draw_yx_GEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 {
 
 	//NOTE:: calculates x and y values on canvas coordinates (+x to the right, +y up) then plots them in gem coordinates (+x down, +y left)
@@ -116,19 +117,15 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 	int center_strip = (n_strips - 1) / 2.0 ;
 
-	// if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
+	if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
 
 
 
 	//NOTE: indexes strip number so that the center strip(assumed to be approx at 0 on the module) is 0 and converts to physical distance with pitch
 
-	
+	if (modNum){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;}
+
 	double strip_num_offset = strip_num - center_strip;
-
-
-	if (modNum<6){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;
-	std::cout << "\nCenter strip " << center_strip << std::endl;
-	}
 
 	
 	double distFromCenter = (strip_num_offset) * pitch;//
@@ -150,15 +147,10 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 
 
 	//NOTE: xy coords of the center of the current strip(shifted perpendicular to the strip)
-	double x_center = (distFromCenter * fPx  
-	+ (mod_x
-		-getOffset(modNum, axis)
-	));
+	double x_center = (distFromCenter * fPx  + (mod_x+getOffset(modNum, axis)));
 
 	
-	double y_center = (mod_y
-		-getOffset(modNum, axis) 
-		+ distFromCenter * fPy) ;
+	double y_center = (mod_y+getOffset(modNum, axis) + distFromCenter * fPy) ;
 
 
 	TMarker* OffsetMark = new TMarker(distFromCenter * fPy, distFromCenter * fPx, 20);
@@ -170,12 +162,10 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 	centerMark->SetMarkerSize(0.3);
 	// centerMark->Draw("same");
 
-	// double half_length = 0.5 * (TMath::Sqrt(
-	// 	TMath::Sq(fabs(mod_size_x * cos(angle))) +
-	// 	TMath::Sq(fabs(mod_size_y * sin(angle))))
-	// );
-
-	double half_length = mod_size_x / 2.0;
+	double half_length = 0.5 * (TMath::Sqrt(
+		TMath::Sq(fabs(mod_size_x * cos(angle))) +
+		TMath::Sq(fabs(mod_size_y * sin(angle))))
+	);
 	
 
 	double x1 = x_center - half_length * dx_offset;
@@ -260,6 +250,17 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 		stripLine->SetLineWidth(1);
 		// stripLine->SetLineWidth(.3);
 		uDrawn++;
+        if (strip_num%(n_strips/2) -1){
+        // TMarker* APVMark = new TMarker(y2, distFromCenter * fPx, 20);
+        TMarker* APVMark = new TMarker(y1, x1, 21);
+        APVMark->SetMarkerSize(0.3);
+        APVMark->SetMarkerColor(kBlack);
+        // APVMark->SetMarkerStyle(21);
+        APVMark->Draw("same");
+        uAPVs++;
+        }
+
+
 	} else {         // V
 		stripLine->SetLineColor(kPink);
 		// stripLine->SetLineStyle(2);
@@ -267,12 +268,261 @@ void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
 		stripLine->SetLineWidth(1);
 		// stripLine->SetLineWidth(.3);
 		vDrawn++;
-	}
+        }
+        if (strip_num%(n_strips/2) -1){
+        // TMarker* APVMark = new TMarker(y1, distFromCenter * fPx, 20);
+        TMarker* APVMark = new TMarker(y2, x2, 21);
+        APVMark->SetMarkerSize(0.3);
+        APVMark->SetMarkerColor(kBlack);
+        // APVMark->SetMarkerStyle(21);
+        APVMark->Draw("same");
+        vAPVs++;
+        }
 	stripLine->Draw("same");
+    }
+
 }
-}
+void drawGEMStrip(int modNum, int axis, int strip_num, int ROIcenter_strip)
+{
+
+	//NOTE:: calculates x and y values on canvas coordinates (+x to the right, +y up) then plots them in gem coordinates (+x down, +y left)
+	
+
+	if(strip_num%20==0){//Testing with greater	plotted spacing for visibility
+	// if(strip_num){//Testing with greater	plotted spacing for visibility
+	auto& modInfo = refModMap[modNum];
+
+	double mod_x = modInfo.position[0];
+	double mod_y = modInfo.position[1];
+	double mod_size_x = modInfo.size[0];
+	double mod_size_y = modInfo.size[1];
+	double angle = modInfo.uvangles[axis] * TMath::DegToRad();
+
+	
+	angle = -angle; // clockwise 
+
+	int n_strips = modInfo.nstripsuv[axis];
+	double pitch = 0.0004;
+
+	// std::cout << "strip_num " << strip_num << std::endl;
 
 
+	double layerSizeX=0;
+	double layerSizeY=0;
+
+	if(modNum<6){ layerSizeX = mod_size_x;}
+	if (modNum>=6){layerSizeX = mod_size_x *4;}
+
+	int center_strip = (n_strips - 1) / 2.0 ;
+
+	// if (modNum){std::cout << "\nCenter strip " << center_strip << std::endl;}
+
+
+
+	//NOTE: indexes strip number so that the center strip(assumed to be approx at 0 on the module) is 0 and converts to physical distance with pitch
+
+	// if (modNum){std::cout << "\n strip_num " << strip_num << " on axis " << axis << std::endl;}
+
+	double strip_num_offset = strip_num - center_strip;
+
+
+	if (modNum == 1){
+		// angle = -angle;
+		// strip_num_offset = -strip_num_offset;
+	}
+
+
+	
+	double distFromCenter = (strip_num_offset) * pitch;//
+
+	
+
+	double fPx, fPy;
+	double dx_offset, dy_offset;
+
+	//NOTE:clockwise rotation is positive
+	fPx = std::cos(angle);
+	fPy = std::sin(angle);
+	// fPx = std::cos(angle + (TMath::Pi()/2));;
+	// fPy = std::sin(angle + (TMath::Pi()/2));;
+
+	// fPx = -fPy;
+	// fPy = fPx;
+
+	if (modNum < 6) {
+		std::cout << "\nAngle " << angle*TMath::RadToDeg() << std::endl;
+	}
+
+
+
+	// NOTE: OFFSET PERPENDICULAR TO STRIP DIRECTION
+
+	dx_offset = std::cos(angle + (TMath::Pi()/2)); // Offset direction
+	dy_offset = std::sin(angle + (TMath::Pi()/2));
+	// dx_offset = std::cos(angle); // Offset direction
+	// dy_offset = std::sin(angle);
+
+	
+
+
+	// dx_offset = dy_offset;
+	// dy_offset = dx_offset;
+
+
+	//NOTE: xy coords of the center of the current strip(shifted perpendicular to the strip)
+	// double x_center = (distFromCenter * fPx  + (mod_x-getOffset(modNum, axis)));
+	double x_center = (distFromCenter * fPx  + (mod_x));
+	// double x_center = (distFromCenter * dx_offset  + (mod_x+getOffset(modNum, axis)));
+
+	
+	// double y_center = (mod_y+getOffset(modNum, axis) + distFromCenter * dy_offset) ;
+	double y_center = (mod_y-getOffset(modNum, axis) + distFromCenter * fPy) ;
+	// double y_center = (mod_y + distFromCenter * fPy) ;
+
+
+	// TMarker* OffsetMark = new TMarker(distFromCenter * fPy, distFromCenter * fPx, 20);
+	// OffsetMark->SetMarkerSize(0.3);
+	// OffsetMark->SetMarkerColor(kBlue);
+	// OffsetMark->Draw("same");
+
+	TMarker* centerMark = new TMarker(-y_center, x_center, 20);
+	// TMarker* centerMark = new TMarker(x_center, y_center, 20);
+	centerMark->SetMarkerSize(0.3);
+	// centerMark->Draw("same");
+
+	double half_length = 0.5 * (TMath::Sqrt(
+		TMath::Sq(fabs(mod_size_x * cos(angle))) +
+		TMath::Sq(fabs(mod_size_y * sin(angle))))
+	);
+
+	// std::cout << "half_length " << half_length << std::endl;
+	// std::cout << "mod_size_x " << mod_size_x << std::endl;
+	// std::cout << "mod_size_y " << mod_size_y << std::endl;
+	
+
+	double x1 = x_center - half_length * dx_offset;
+	double x2 = x_center + half_length * dx_offset;
+	// double x1 = x_center - half_length * fPx;
+	// double x2 = x_center + half_length * fPx;
+
+	double y1, y2;
+	
+	if (modNum>=6 && axis==0){y1 = y_center - mod_size_y/2;
+	y2 = y_center + mod_size_y/2;
+	}
+	else {y1 = y_center - half_length * dy_offset;	
+		y2 = y_center + half_length * dy_offset;
+		}
+
+	// y1 = y_center - half_length * dy_offset;	
+		// y2 = y_center + half_length * dy_offset;
+		// y1 = y_center - half_length * fPy;
+		// y2 = y_center + half_length * fPy;
+
+	// X center line (vertical): fix "x" value at 0 (your flipped), span full Y range
+	TLine* xCenterLine = new TLine(
+		-mod_size_y / 2.0, 0,
+		+mod_size_y / 2.0, 0
+	);
+
+	// Y center line (horizontal): fix "y" value at 0 (your flipped), span full X range
+	TLine* yCenterLine = new TLine(
+		0, -mod_size_x / 2.0,
+		0, +mod_size_x / 2.0
+	);
+
+	// xCenterLine->Draw("SAME");
+	// yCenterLine->Draw("SAME");
+
+
+
+
+	// Module boundaries in global coordinates
+	double xmin = - layerSizeX / 2.0;
+	double xmax = + layerSizeX / 2.0;
+
+	double ymin = -mod_size_y / 2.0;
+	double ymax = mod_size_y / 2.0;
+
+	// Liang-Barsky clipping
+	auto clipLine = [&](double& x1, double& y1, double& x2, double& y2) -> bool {
+		double dy = y2 - y1;
+		double dx = x2 - x1;
+
+		double p[4] = {-dx, dx, -dy, dy};
+		double q[4] = {x1 - xmin, xmax - x1, y1 - ymin, ymax - y1};
+
+		double u1 = 0, u2 = 1;
+
+		for (int i = 0; i < 4; i++) {
+			if (p[i] == 0 && q[i] < 0) return false;
+			if (p[i] != 0) {
+				double u = q[i] / p[i];
+				if (p[i] < 0) u1 = std::max(u1, u);
+				else         u2 = std::min(u2, u);
+			}
+		}
+
+		if (u1 > u2) return false;
+
+		double new_x1 = x1 + u1 * dx;
+		double new_y1 = y1 + u1 * dy;
+		double new_x2 = x1 + u2 * dx;
+		double new_y2 = y1 + u2 * dy;
+
+		x1 = new_x1; y1 = new_y1;
+		x2 = new_x2; y2 = new_y2;
+
+		return true;
+	};
+
+	if (!clipLine(x1, y1, x2, y2)) return; // Strip is entirely outside module
+
+
+	// Draw the clipped strip
+	// TLine* stripLine = new TLine(x1, y1, x2, y2); //Drawn 
+	// TLine* stripLine = new TLine(y1*sin(TMath::Pi()/2), x1*cos(TMath::Pi()/2), y2*sin(TMath::Pi()/2), x2*cos(TMath::Pi()/2)); //Drawn 
+	// TLine* stripLine = new TLine(-y1*(fPx), x1*(-fPy), -y2*(fPx), x2*(-fPy)); //Drawn 
+	TLine* stripLine = new TLine(-y1, x1, -y2, x2); //Drawn 
+	if (axis == 0) { // U
+		stripLine->SetLineColor(kCyan);
+		// stripLine->SetLineStyle(2);
+		// stripLine->SetLineStyle(9);
+		stripLine->SetLineWidth(1);
+		// stripLine->SetLineWidth(.3);
+		uDrawn++;
+        if ((strip_num%((n_strips-1)/2))==0){
+        // TMarker* APVMark = new TMarker(y2, distFromCenter * fPx, 20);
+        TMarker* APVMark = new TMarker(y1, x1, 21);
+        APVMark->SetMarkerSize(0.3);
+        APVMark->SetMarkerColor(kBlack);
+        // APVMark->SetMarkerStyle(21);
+        // APVMark->Draw("same");
+        uAPVs++;
+        }
+
+
+	} else {         // V
+		stripLine->SetLineColor(kPink);
+		// stripLine->SetLineStyle(2);
+		// stripLine->SetLineStyle(9);
+		stripLine->SetLineWidth(1);
+		// stripLine->SetLineWidth(.3);
+		vDrawn++;
+        }
+        if ((strip_num%((n_strips-1)/2))==0){
+        // TMarker* APVMark = new TMarker(y1, distFromCenter * fPx, 20);
+        TMarker* APVMark = new TMarker(y2, x2, 21);
+        APVMark->SetMarkerSize(0.3);
+        APVMark->SetMarkerColor(kBlack);
+        // APVMark->SetMarkerStyle(21);
+        // APVMark->Draw("same");
+        vAPVs++;
+        }
+	stripLine->Draw("same");
+    }
+
+}
 
 
 // ---- GEM Strip ROI Visualization ----
@@ -424,43 +674,43 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 		// latex->SetTextSize(0.05);
 		// latex->DrawLatex(0.1, 0.9, Form("Layer %d", layer));
 
-		// if (binROI.find(layer) != binROI.end()) {
-		// 	const ROI& roi = binROI.at(layer);
+		if (binROI.find(layer) != binROI.end()) {
+			const ROI& roi = binROI.at(layer);
 		
-		// 	double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
-		// 	double xMaxROI = roi.yMax;
-		// 	double yMinROI = roi.xMin;
-		// 	double yMaxROI = roi.xMax;
+			double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
+			double xMaxROI = roi.yMax;
+			double yMinROI = roi.xMin;
+			double yMaxROI = roi.xMax;
 
-		// 	// //xy already in GEM coords?
-		// 	// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
-		// 	// double xMaxROI = roi.xMax;
-		// 	// double yMinROI = roi.yMin;
-		// 	// double yMaxROI = roi.yMax;
+			// //xy already in GEM coords?
+			// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
+			// double xMaxROI = roi.xMax;
+			// double yMinROI = roi.yMin;
+			// double yMaxROI = roi.yMax;
 
-		// 	std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
-		// 	<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
+			std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
+			<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
 		
-		// 	TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
-		// 	TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
-		// 	TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
-		// 	TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
+			TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
+			TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
+			TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
+			TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
 		
-		// 	roi_left->SetLineColor(kGreen);
-		// 	roi_right->SetLineColor(kGreen);
-		// 	roi_top->SetLineColor(kGreen);
-		// 	roi_bottom->SetLineColor(kGreen);
+			roi_left->SetLineColor(kGreen);
+			roi_right->SetLineColor(kGreen);
+			roi_top->SetLineColor(kGreen);
+			roi_bottom->SetLineColor(kGreen);
 		
-		// 	roi_left->SetLineWidth(2);
-		// 	roi_right->SetLineWidth(2);
-		// 	roi_top->SetLineWidth(2);
-		// 	roi_bottom->SetLineWidth(2);
+			roi_left->SetLineWidth(2);
+			roi_right->SetLineWidth(2);
+			roi_top->SetLineWidth(2);
+			roi_bottom->SetLineWidth(2);
 		
-		// 	roi_left->Draw("same");
-		// 	roi_right->Draw("same");
-		// 	roi_top->Draw("same");
-		// 	roi_bottom->Draw("same");
-		// }
+			roi_left->Draw("same");
+			roi_right->Draw("same");
+			roi_top->Draw("same");
+			roi_bottom->Draw("same");
+		}
 
 	}
 
@@ -520,7 +770,7 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 		
 		double u_angle = thisModInfo.uvangles[0];
 		double v_angle = thisModInfo.uvangles[1];
-		double pitch = 0.0004;
+		double pitch = 0.004;
 		int n_u = thisModInfo.nstripsuv[0];
 		int n_v = thisModInfo.nstripsuv[1];
 
@@ -613,45 +863,6 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 		uStripLoopCalls=0;
 		vStripLoopCalls=0;
 
-	
-		if (binROI.find(layer) != binROI.end()) {
-			const ROI& roi = binROI.at(layer);
-		
-			double xMinROI = roi.yMin; // swap X and Y because your dummy hist Y is geom X
-			double xMaxROI = roi.yMax;
-			double yMinROI = roi.xMin;
-			double yMaxROI = roi.xMax;
-
-			// //xy already in GEM coords?
-			// double xMinROI = roi.xMin; // swap X and Y because your dummy hist Y is geom X
-			// double xMaxROI = roi.xMax;
-			// double yMinROI = roi.yMin;
-			// double yMaxROI = roi.yMax;
-
-			std::cout << "\nROI xMin, yMin: " << xMinROI << ", " << yMinROI
-			<< "\nROI xMax, yMax: " << xMaxROI << ", " << yMaxROI << std::endl;
-		
-			TLine* roi_left = new TLine(xMinROI, yMinROI, xMinROI, yMaxROI);
-			TLine* roi_right = new TLine(xMaxROI, yMinROI, xMaxROI, yMaxROI);
-			TLine* roi_top = new TLine(xMinROI, yMaxROI, xMaxROI, yMaxROI);
-			TLine* roi_bottom = new TLine(xMinROI, yMinROI, xMaxROI, yMinROI);
-		
-			roi_left->SetLineColor(kP6Violet);
-			roi_right->SetLineColor(kP6Violet);
-			roi_top->SetLineColor(kP6Violet);
-			roi_bottom->SetLineColor(kP6Violet);
-		
-			roi_left->SetLineWidth(2);
-			roi_right->SetLineWidth(2);
-			roi_top->SetLineWidth(2);
-			roi_bottom->SetLineWidth(2);
-		
-			roi_left->Draw("same");
-			roi_right->Draw("same");
-			roi_top->Draw("same");
-			roi_bottom->Draw("same");
-		}
-
 
 		// TLatex* latex = new TLatex();
 		// latex->SetNDC(); // normalized coordinates (0–1)
@@ -674,15 +885,31 @@ TCanvas* showgemstrips_for_ecalbin(int ecalBinNum, std::map<int, ROI> binROI, co
 }
 
 
-int exportPDF(TCanvas *C, int binNum) {
-    C->SaveAs(Form("GEM_ECalBin%d.pdf", binNum));
-    return 0;
+int exportPDF(TCanvas * C){
+	C->SaveAs("GEM_ECalBin.pdf");
+	return 0;
 }
 
 
 
+
+
+
+
+// showAPVs_for_ecalbin(int ecalBinNum, const std::map<int, std::pair<std::set<int>, std::set<int>>>& StripsPerMod) {
+//     // showAPVs_for_ecalbin(ecalBinNum, StripsPerMod);
+//     std::cout << "showAPVs_for_ecalbin() called" << std::endl;
+//     return 0;
+// }
+
+// //NOTE: want n/2 to have edges of APVs at 1st and last strip
+// if (stripNum%(numStrips/2))
+
+
+
+
 //Main func
-int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat", const std::string& roi_file = "ROI_GEP3_FT_1.txt") {
+int showGEM_APVs_for_ecalbin(const std::string& db_local = "db_FT_local.dat", const std::string& roi_file = "ROI_GEP3_FT_1.txt") {
 
 	// using namespace GEMstripsHit_for_ecalbin;
 	
@@ -798,14 +1025,14 @@ int showGEMstripsHit_for_ecalbin(const std::string& db_local = "db_FT_local.dat"
 	}
 
 	
-	// --- NEW CLEAN INPUT: Ask about PDF saving ---
-	bool save_as_pdf = false;
-	std::string usr_save_as_pdf;
-	std::cout << "Save as PDF(y) or show Active Canvas(n)? (y/n): ";
-	std::getline(std::cin, usr_save_as_pdf);
-	if (usr_save_as_pdf == "y" || usr_save_as_pdf == "Y") {
-		save_as_pdf = true;
-	}
+	// // --- NEW CLEAN INPUT: Ask about PDF saving ---
+	// bool save_as_pdf = false;
+	// std::string usr_save_as_pdf;
+	// std::cout << "Save as PDF and quit? (y/n): ";
+	// std::getline(std::cin, usr_save_as_pdf);
+	// if (usr_save_as_pdf == "y" || usr_save_as_pdf == "Y") {
+	// 	save_as_pdf = true;
+	// }
 	
 	
 	// bool interactive_view = false;
@@ -843,13 +1070,7 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			}
 
 			canvas->Update();
-
-			if (save_as_pdf==true){
-				exportPDF(canvas, binNum);
-				// return 0;
-			}
-
-			// canvas->Draw();
+			canvas->Draw();
 			gSystem->ProcessEvents();
 		}
 	} else {
@@ -874,13 +1095,7 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 			}
 
 			canvas->Update();
-
-			if (save_as_pdf==true){
-				exportPDF(canvas, binNum);
-				// return 0;
-			}
-
-			// canvas->Draw();
+			canvas->Draw();
 			gSystem->ProcessEvents();
 		}
 	}
