@@ -1,7 +1,10 @@
-#include "ecalbin.h"
+// This script will generate GEM FT ROIs by analyzing replayed real/simulation data.
+
+#include "ecalbin2.h"
 #include <vector>
 #include <algorithm>
 #include <fstream>
+
 
 // Define the struct to hold the Region Of Interest (ROI) rectangle boundaries.
 struct ROI
@@ -255,7 +258,9 @@ void writeROIToFile(const std::vector<std::vector<ROI>>& vvROI, const std::strin
             const ROI& roi = vvROI[i][j];
 
             // Write data in a structured format
-            outFile << i << " " << j << " " << roi.xMin << " " << roi.xMax << " " << roi.yMin << " " << roi.yMax << "\n";
+            // IMPORTANT: To reflect the actual physical setup, we have drawn the Transport coordinate system X axisi on the histogram vertical axis and the Y axisi on histogram horizontal axis.
+            // But in order to compare with the DB GEM positions we should put these back to transport coordiates.
+            outFile << i << " " << j << " " << roi.yMin << " " << roi.yMax << " " << roi.xMin << " " << roi.xMax << "\n";
         }
     }
 
@@ -263,68 +268,87 @@ void writeROIToFile(const std::vector<std::vector<ROI>>& vvROI, const std::strin
     std::cout << "ROI data successfully written to " << filename << std::endl;
 }
 
+constexpr int max_NECalClus {100};
+constexpr int max_NGEMhits {10000};
 
 
-void print_gemhitpos_perecalbin( const char* simfilename = "dummy" )
+void FT_ROI_fromRealData()
 {
-	
-	TChain* T = new TChain("T");
 
-	// T->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep_sim/g4sbs_out/GEP3_elastic_targzoff_9cm_preinit_006mmlead_job_1*.root");
-	// T->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep_sim/g4sbs_out/GEP3_elastic_targzoff_9cm_preinit_006mmlead_job_2*.root");
-	// T->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep_sim/g4sbs_out/GEP3_elastic_targzoff_9cm_preinit_006mmlead_job_4*.root");
-	T->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep_sim/g4sbs_out/GEP3_elastic_targzoff_9cm_preinit_006mmlead_job_5.root");
+	TChain* C = new TChain("T");
 
-	//T->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep_sim/g4sbs_out/GEP3_elastic_targzoff_9cm_preinit_006mmlead_job_*.root");
+	C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30.root");
+	C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_1.root");
+	C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_2.root");
+	C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_3.root");
+	C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_4.root");
+	C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_5.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_1.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_2.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_3.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_4.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_5.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_6.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_7.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_8.root");
+	// C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse_9.root");
+	//C->Add("/lustre24/expphy/volatile/halla/sbs/adr/gep-parsed/GEP1/LH2/bigprod_Apr30/GEP1_LH2_bigbrod_Apr30_May6parse.root");
+	//C->Add("/lustre24/expphy/volatile/halla/sbs/sbs-gep/GEP_REPLAYS/GEP1/LH2/bigprod_Apr28/rootfiles/gep5_fullreplay_3320_stream2_2_seg9_9.root");
+	// std::cout << "Begin making the gloabl cut..." << std::endl;
+	// C->Draw(">>elist", 
+	// 	"(((((abs(heep.dxECAL-0.03)<0.06&&abs(heep.dyECAL-0.023)<0.08)&&(abs(heep.dt_ADC-115)<20.0&&abs(heep.dpp+0.12)<0.1))&&(sbs.gemFT.track.chi2ndf[0]<30))&&((sbs.gemFT.track.nhits[0]>4||sbs.gemFT.track.chi2ndf[0]<15)))&&(abs(sbs.tr.x[0]+sbs.tr.th[0]*sbs.z_bcp[30]-sbs.x_bcp[30]+0.076)<0.21))&&(abs(sbs.tr.y[0]+sbs.tr.ph[0]*sbs.z_bcp[30]-sbs.y_bcp[30])<0.21)"
+	// 	, "entrylist");
+	// TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
 
-	T->SetBranchStatus("*", 0);
-	T->SetBranchStatus("Earm.ECalTF1.hit.nhits", 1);
-	T->SetBranchStatus("Earm.ECalTF1.hit.row", 1);
-	T->SetBranchStatus("Earm.ECalTF1.hit.col", 1);
-	T->SetBranchStatus("Earm.ECalTF1.hit.cell", 1);
-	T->SetBranchStatus("Earm.ECalTF1.hit.sumedep", 1);
-	T->SetBranchStatus("Earm.ECalTF1.hit.xcell", 1);
-	T->SetBranchStatus("Earm.ECalTF1.hit.ycell", 1);
-	T->SetBranchStatus("Harm.FT.hit.nhits", 1);
-	T->SetBranchStatus("Harm.FT.hit.plane", 1);
-	T->SetBranchStatus("Harm.FT.hit.x", 1);
-	T->SetBranchStatus("Harm.FT.hit.y", 1);
-	T->SetBranchStatus("Harm.FT.Track.ntracks", 1);
-	T->SetBranchStatus("Harm.FT.Track.MID", 1);
-	T->SetBranchStatus("Harm.FT.Track.NumHits", 1);
+	// check how many entries passed the cut
+	std::cout << "Events for analysis: " << C->GetEntries() << std::endl;
 
-	int n_ecalhits {0};
-	int n_gemhits {0};
-	std::vector<int>* ecalhit_row = nullptr;
-	std::vector<int>* ecalhit_col = nullptr;
-	std::vector<int>* ecalhit_cell = nullptr;
-	std::vector<double>* ecalhit_sumedep = nullptr;
-	std::vector<double>* ecalhit_xcell = nullptr;
-	std::vector<double>* ecalhit_ycell = nullptr;
-	std::vector<int>* gemhit_plane = nullptr;
-	std::vector<double>* gemhit_x = nullptr;
-	std::vector<double>* gemhit_y = nullptr;
-	int n_gemtracks {0};
-	std::vector<int>* gemtrack_mid = nullptr;
-	std::vector<int>* gemtrack_numhits = nullptr;
+	// C->SetEntryList(elist);
 
-	T->SetBranchAddress("Earm.ECalTF1.hit.nhits", &n_ecalhits);
-	T->SetBranchAddress("Earm.ECalTF1.hit.row", &ecalhit_row);
-	T->SetBranchAddress("Earm.ECalTF1.hit.col", &ecalhit_col);
-	T->SetBranchAddress("Earm.ECalTF1.hit.cell", &ecalhit_cell);
-	T->SetBranchAddress("Earm.ECalTF1.hit.sumedep", &ecalhit_sumedep);
-	T->SetBranchAddress("Earm.ECalTF1.hit.xcell", &ecalhit_xcell);
-	T->SetBranchAddress("Earm.ECalTF1.hit.ycell", &ecalhit_ycell);
-	T->SetBranchAddress("Harm.FT.hit.nhits", &n_gemhits);
-	T->SetBranchAddress("Harm.FT.hit.plane", &gemhit_plane);
-	T->SetBranchAddress("Harm.FT.hit.x", &gemhit_x);
-	T->SetBranchAddress("Harm.FT.hit.y", &gemhit_y);
-	T->SetBranchAddress("Harm.FT.Track.ntracks", &n_gemtracks);
-	T->SetBranchAddress("Harm.FT.Track.MID", &gemtrack_mid);
-	T->SetBranchAddress("Harm.FT.Track.NumHits", &gemtrack_numhits);	
+	TH2F* h2_FT_layer [8];
+
+	for ( int i = 0; i < 8; i++ ) h2_FT_layer[i] = new TH2F( Form("h2_FT_layer_%i", i), Form("h2_FT_layer_%i; Y (m); X (m)", i), 100,-0.4, 0.4, 100, -1.1, 1.1 );
+
+	C->SetBranchStatus("*", 0);
+	C->SetBranchStatus("Ndata.earm.ecal.clus_blk.id", 1);
+	C->SetBranchStatus("earm.ecal.clus_blk.id", 1);
+	//C->SetBranchStatus("Ndata.earm.ecal.clus.e", 1);
+	C->SetBranchStatus("earm.ecal.clus_blk.e", 1);
+	C->SetBranchStatus("Ndata.sbs.gemFT.hit.layer", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.layer", 1);
+	//C->SetBranchStatus("Ndata.sbs.gemFT.module", 1);
+	//C->SetBranchStatus("sbs.gemFT.module", 1);
+	//C->SetBranchStatus("Ndata.sbs.gemFT.hit.xglobal", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.xglobal", 1);
+	//C->SetBranchStatus("Ndata.sbs.gemFT.hit.yglobal", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.yglobal", 1);
+	C->SetBranchStatus("sbs.gemFT.hit.trackindex", 1);
+
+	int nECalClusBlks;
+	double ecalclusblk_id [max_NECalClus];
+	double ecalclusblk_e [max_NECalClus];
+	int nGemHits;
+	double gemhit_layer [max_NGEMhits];
+	//double gemhit_module [max_NGEMhits];
+	double gemhit_xglobal [max_NGEMhits];
+	double gemhit_yglobal [max_NGEMhits];
+	double gemhit_trackindex [max_NGEMhits];
+
+	C->SetBranchAddress("Ndata.earm.ecal.clus_blk.id", &nECalClusBlks);
+	C->SetBranchAddress("earm.ecal.clus_blk.id", ecalclusblk_id);
+	C->SetBranchAddress("earm.ecal.clus_blk.e", ecalclusblk_e);
+	C->SetBranchAddress("Ndata.sbs.gemFT.hit.layer", &nGemHits);
+	C->SetBranchAddress("sbs.gemFT.hit.layer", gemhit_layer);
+	//C->SetBranchAddress("sbs.gemFT.hit.module", gemhit_module);
+	C->SetBranchAddress("sbs.gemFT.hit.xglobal", gemhit_xglobal);
+	C->SetBranchAddress("sbs.gemFT.hit.yglobal", gemhit_yglobal); 
+	C->SetBranchAddress("sbs.gemFT.hit.trackindex", gemhit_trackindex);
+
+	// Initialize the ECalbin class.
+	Ecalbin ecalbin{};
 
 	const int n_gemlayers = 8;
-	const int n_ecalbins = 226;
+	const int n_ecalbins = ecalbin.numOfECalBinsNew();
 
 	// Creating a vector of vectors.
 	std::vector<std::vector<TH2F*>> gemhithists_perecalbin( n_ecalbins, std::vector<TH2F*>(n_gemlayers, nullptr) );
@@ -353,59 +377,36 @@ void print_gemhitpos_perecalbin( const char* simfilename = "dummy" )
 		std::string canvasName = "ecalbin_" + std::to_string(i);
 
 		canvas_perecalbin[i] = new TCanvas(canvasName.c_str(), canvasName.c_str(), 1200, 800);
-		//canvas_perecalbin[i]->Divide(4,2);
 	}
 
-	// Initialize the ECalbin class.
-	Ecalbin ecalbin{};
+	long nevent = 0;
 
-	// std::vector<TH2F*> gemhitlayer_hists;
-
-	// for (int i = 0; i < 8; i++)
-	// {
-	// 	gemhitlayer_hists.push_back( new TH2F( Form("h2Dhit_layer_%d", i+1), Form("2D hits in GEM layer: %d", i+1), 100,-0.5, 0.5, 100, -1.5, 1.5) );
-	// }
-
-
-	// TCanvas* C = new TCanvas("canvas", "Hit Locations in Detector Planes", 1200, 800);
-	// C->Divide(4,2);
-
-	long event_no {0};
-
-	// First loop to fill the histograms.
-	while ( T->GetEntry(event_no++) )
+	while ( C->GetEntry(nevent++) )
 	{
-		// Some Track quality cuts on the simulation data.
-		if ( n_gemtracks == 0 || gemtrack_mid->at(0) != 0 || gemtrack_numhits->at(0) < 3 ) continue;
+		int maxCellOfMaxCluster = int( ecalclusblk_id[0] ); 
+		int ecalBinNo_thisEvent = ecalbin.ecalBinByCellNo_New(maxCellOfMaxCluster);
 
-		// Check if the ECal arrays have data
-		if ( ecalhit_row->empty() || ecalhit_col->empty() || ecalhit_cell->empty() || ecalhit_sumedep->empty() || ecalhit_xcell->empty() || ecalhit_ycell->empty() ) continue;
-			
-		// Check if the array sizes match
-		if ( ecalhit_row->size() != n_ecalhits || ecalhit_col->size() != n_ecalhits || ecalhit_cell->size() != n_ecalhits || ecalhit_sumedep->size() != n_ecalhits || ecalhit_xcell->size() != n_ecalhits || ecalhit_ycell->size() != n_ecalhits ) continue;
-
-		// See if the GEM array sizes match.
-		if ( gemhit_x->size() != n_gemhits || gemhit_y->size() != n_gemhits || gemhit_plane->size() != n_gemhits ) continue;
-
-		// Do ECal clustering.
-		ecalbin.clearECalClusVec();
-		ecalbin.ECalClustering(n_ecalhits, ecalhit_row, ecalhit_col, ecalhit_cell, ecalhit_sumedep, ecalhit_xcell, ecalhit_ycell);
-
-		// Skip this event if no ECal clusters exists.
-		if ( !ecalbin.does_ecalclus_exist() ) continue;
-
-		int ecal_bin_no = ecalbin.highestE_ecalbinno();
-
-		//std::cout << "Ev no: " << event_no << " : ECal bin: " << ecal_bin_no << '\n';
-
-		// Fill the GEM 2D hit histograms.
-		for ( int ihit = 0; ihit < n_gemhits; ihit++ )
+		for ( int ihit = 0; ihit < nGemHits; ihit++ )
 		{
-			//gemhitlayer_hists[ gemhit_plane->at(ihit) - 1 ]->Fill( gemhit_y->at(ihit), gemhit_x->at(ihit) );
-			gemhithists_perecalbin[ecal_bin_no][gemhit_plane->at(ihit) - 1]->Fill( gemhit_y->at(ihit), gemhit_x->at(ihit) );
+			if ( gemhit_trackindex[ihit] != 0 ) continue; // Only plot hits in the best track.
+
+			gemhithists_perecalbin[ecalBinNo_thisEvent][gemhit_layer[ihit]]->Fill( gemhit_yglobal[ihit], gemhit_xglobal[ihit] );		
+
 		}
 
 	}
+
+	// TCanvas* canvas = new TCanvas("hists","hists",1200,800);
+	// canvas->Divide(4,2);
+
+	// for ( int i = 0; i < 8; i++ )
+	// {
+	// 	canvas->cd(i+1);
+
+	// 	h2_FT_layer[i]->Draw("COLZ");
+	// }
+	
+	// canvas->SaveAs("FT_GEP1_allhisforlayers.pdf");
 
 	// Make a vector of vectors with ROI.
 	std::vector<std::vector<ROI>> vvROI(n_ecalbins, std::vector<ROI>(n_gemlayers, ROI(0,0,0,0)));
@@ -416,7 +417,7 @@ void print_gemhitpos_perecalbin( const char* simfilename = "dummy" )
 		for ( int j = 0; j < n_gemlayers; j++ )
 		{
 			//vvROI[i][j] = computeROI( gemhithists_perecalbin[i][j], 0.95 );
-			vvROI[i][j] = computeROI_MaxBinExpand_2( gemhithists_perecalbin[i][j], 0.1, 0.01 );
+			vvROI[i][j] = computeROI_MaxBinExpand_2( gemhithists_perecalbin[i][j], 0.1, 0.0001 );
 			std::cout << "ECal bin " << i << " GEM layer " << j << " ROI, x_min, x_max, y_min, y_max:" << vvROI[i][j].xMin << vvROI[i][j].xMax << vvROI[i][j].yMin << vvROI[i][j].yMax << '\n';
 		}
 	}
@@ -428,54 +429,64 @@ void print_gemhitpos_perecalbin( const char* simfilename = "dummy" )
 		// canvas_perecalbin[i_can]->DrawFrame(-0.6, -1.5, 0.7, 1.5, "ECal Detector;X Position (m);Y Position (m)");
 
 		// Create a large left pad manually
-    	TPad *leftPad = new TPad("leftPad", "Left Pad", 0.0, 0.0, 0.2, 1.0); // Merging first column
-    	leftPad->cd();
+    	TPad *leftPad = new TPad("leftPad", "Left Pad", 0.0, 0.0, 0.33, 1.0); // Merging first column
+    	//leftPad->cd();
     	leftPad->Draw();
-    	// leftPad->cd();
-    	//leftPad->SetGrid();
-    	gemhithists_perecalbin[i_can][1]->Draw("COLZ");
-	    //leftPad->DrawFrame(-0.6, -1.5, 0.7, 1.5, "ECal Detector;X Position (m);Y Position (m)");
-   		//leftPad->cd();
-   		leftPad->Update();
+    	// // // leftPad->cd();
+    	// leftPad->SetGrid();
+    	//gemhithists_perecalbin[i_can][1]->Draw("COLZ");
+    	leftPad->cd();
+
+    	int iECalBin = i_can;
+	    leftPad->DrawFrame(-0.6, -1.5, 0.7, 1.5, Form("ECal Bin: %i;X Position (m);Y Position (m)", iECalBin));
+
+	    TList* ecalListPerBin = ecalbin.returnECalDiagramPerBinTListPtr( iECalBin );
+
+	 	ecalListPerBin->Draw("same");
+   		// //leftPad->cd();
+   		// leftPad->Update();
 
    		 // Create the remaining 8 pads in a 4×2 grid (excluding the leftmost column)
-  //   	TPad *pad[8];
-  //   	int padIndex = 0;
-	 //    for (int i = 0; i < 2; i++) { // Two rows
-	 //        for (int j = 1; j < 5; j++) { // Skipping the first column
-	 //            double xlow = 0.2 + 0.2 * (j - 1); // Start from 0.2 since leftPad occupies 0-0.2
-	 //            double ylow = 0.5 * (1 - i);
-	 //            double xup = xlow + 0.2;
-	 //            double yup = ylow + 0.5;
-	 //            pad[padIndex] = new TPad(Form("pad%d", padIndex + 1), Form("Pad %d", padIndex + 1), xlow, ylow, xup, yup);
-	 //            pad[padIndex]->Draw();
-	 //            padIndex++;
-	 //        }
-	 //    }
+	    canvas_perecalbin[i_can]->cd();
+    	TPad* pad[8];
+    	int padIndex = 0;
+	    for (int i = 0; i < 2; i++) 
+	    { // Two rows
+	        for (int j = 1; j < 5; j++) 
+	        { // Skipping the first column
+	            double xlow = 0.33 + 0.16 * (j - 1); // Start from 0.2 since leftPad occupies 0-0.2
+	            double ylow = 0.5 * (1 - i);
+	            double xup = xlow + 0.16;
+	            double yup = ylow + 0.5;
+	            pad[padIndex] = new TPad(Form("pad%d", padIndex + 1), Form("Pad %d", padIndex + 1), xlow, ylow, xup, yup);
+	            pad[padIndex]->Draw();
+	            padIndex++;
+	        }
+	    }
 
-		// for ( int i_gemlayer = 0; i_gemlayer < n_gemlayers; i_gemlayer++ )
-		// {
-		// 	// canvas_perecalbin[i_can]->cd(i_gemlayer+1);
-		// 	pad[i_gemlayer]->cd();
-		// 	pad[i_gemlayer]->SetGrid();
+		for ( int i_gemlayer = 0; i_gemlayer < n_gemlayers; i_gemlayer++ )
+		{
+			// canvas_perecalbin[i_can]->cd(i_gemlayer+1);
+			pad[i_gemlayer]->cd();
+			pad[i_gemlayer]->SetGrid();
 
-		// 	gemhithists_perecalbin[i_can][i_gemlayer]->Draw("COLZ");
+			gemhithists_perecalbin[i_can][i_gemlayer]->Draw("COLZ");
 
-		// 	TBox* roiBox = new TBox(vvROI[i_can][i_gemlayer].xMin, vvROI[i_can][i_gemlayer].yMin, vvROI[i_can][i_gemlayer].xMax, vvROI[i_can][i_gemlayer].yMax);
-		// 	roiBox->SetLineColor(kRed);
-		// 	roiBox->SetLineWidth(2);
-		// 	roiBox->SetFillStyle(0);
-		// 	roiBox->Draw("same");
-		// }
+			TBox* roiBox = new TBox(vvROI[i_can][i_gemlayer].xMin, vvROI[i_can][i_gemlayer].yMin, vvROI[i_can][i_gemlayer].xMax, vvROI[i_can][i_gemlayer].yMax);
+			roiBox->SetLineColor(kRed);
+			roiBox->SetLineWidth(2);
+			roiBox->SetFillStyle(0);
+			roiBox->Draw("same");
+		}
 
 		canvas_perecalbin[i_can]->cd();
 		canvas_perecalbin[i_can]->Update();
 
-		if ( i_can == 0 ) canvas_perecalbin[i_can]->Print("test_print.pdf(");
-		else if ( i_can == n_ecalbins - 1 ) canvas_perecalbin[i_can]->Print("test_print.pdf)");
-		else canvas_perecalbin[i_can]->Print("test_print.pdf");
+		if ( i_can == 0 ) canvas_perecalbin[i_can]->Print("realdat_GEP1_test.pdf(");
+		else if ( i_can == n_ecalbins - 1 ) canvas_perecalbin[i_can]->Print("realdat_GEP1_test.pdf)");
+		else canvas_perecalbin[i_can]->Print("realdat_GEP1_test.pdf");
 	}
 
-	//writeROIToFile( vvROI, "ROI_GEP3_FT_1.txt" );
+	writeROIToFile( vvROI, "ROI_GEP1_FT_realdat.txt" );
 
 }

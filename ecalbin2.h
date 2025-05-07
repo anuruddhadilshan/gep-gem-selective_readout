@@ -571,6 +571,11 @@ public:
 		return cells_by_binglobal_ecal_NEW;
 	}
 
+	int ecalBinByCellNo_New( const int input_cellNo )
+	{
+		return binglobal_by_cell_ecal_NEW[input_cellNo];
+	}
+
 	void drawECal2DCellDiagram()
 	{
 		// Create a ROOT Canvas
