@@ -658,10 +658,10 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 
 			canvas->Update();
 
-			// if (save_as_pdf==true){
-			// 	exportPDF(canvas, binNum);
-			// 	// return 0;
-			// }
+			if (save_as_pdf==true){
+				exportPDF(canvas, binNum);
+				// return 0;
+			}
 
 			// canvas->Draw();
 			gSystem->ProcessEvents();
@@ -689,10 +689,10 @@ std::cout << "\nNumber of ECalBins is " << map_physicalUVStrips_byECalBin_byGEMM
 
 			canvas->Update();
 
-			// if (save_as_pdf==true){
-			// 	exportPDF(canvas, binNum);
-			// 	// return 0;
-			// }
+			if (save_as_pdf==true){
+				exportPDF(canvas, binNum);
+				// return 0;
+			}
 
 			// canvas->Draw();
 			gSystem->ProcessEvents();
