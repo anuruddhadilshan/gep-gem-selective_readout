@@ -300,11 +300,69 @@ void fillGEMInfoMap(){
     std::cout << "Parsed data written to gemFT_Mod_Info.txt\n";
   }
   
+
+  void fillGEMInfoMap_fromFile(const std::string& filename = "db_FT_local.dat") {
+    std::ifstream infile(filename);
+    if (!infile) {
+      std::cerr << "Error: Could not open file " << filename << "\n";
+      return;
+    }
+  
+    std::string line;
+    while (std::getline(infile, line)) {
+      if (line.empty() || line[0] == '#') continue;
+  
+      std::istringstream iss(line);
+      std::string key;
+      iss >> key;
+  
+      if (key.substr(0, 1) != "m") continue;
+  
+      // Example: m0.uangle 180.0
+      size_t dot = key.find('.');
+      if (dot == std::string::npos) continue;
+  
+      std::string modStr = key.substr(1, dot - 1);
+      std::string field = key.substr(dot + 1);
+      int modID = std::stoi(modStr);
+  
+      auto& info = gemInfoMap[modID];
+  
+      if (field == "layer") {
+        iss >> info.layer;
+      } else if (field == "uangle") {
+        iss >> info.uvangles[0];
+      } else if (field == "vangle") {
+        iss >> info.uvangles[1];
+      } else if (field == "uoffset") {
+        iss >> info.uvoffsets[0];
+      } else if (field == "voffset") {
+        iss >> info.uvoffsets[1];
+      } else if (field == "nstripsu") {
+        iss >> info.nstripsuv[0];
+      } else if (field == "nstripsv") {
+        iss >> info.nstripsuv[1];
+      } else if (field == "size") {
+        iss >> info.size[0] >> info.size[1] >> info.size[2];
+      } else if (field == "position") {
+        iss >> info.position[0] >> info.position[1] >> info.position[2];
+      }
+    }
+  
+    // Now compute number of APVs per axis
+    for (auto& [modID, info] : gemInfoMap) {
+      info.apvmap = GetMod_apvmap(modID); // Still using your existing logic
+      info.NuvAPVs[0] = info.nstripsuv[0] / fN_APV25_CHAN;
+      info.NuvAPVs[1] = info.nstripsuv[1] / fN_APV25_CHAN;
+    }
+  }
+  
     
     
 void TestGEMInfoMap(){
   // APVFinder *anAPVFinder = new APVFinder();
 
+  // fillGEMInfoMap();
   fillGEMInfoMap();
   printGEMinfoMap();
   OutputGEMinfoMap();
@@ -314,7 +372,8 @@ void TestGEMInfoMap(){
 std::map<int, gemInfo> GetGemInfoMap(){
 
     // TestGEMInfoMap();
-    fillGEMInfoMap();
+    // fillGEMInfoMap();
+    fillGEMInfoMap_fromFile();
     OutputGEMinfoMap();
     return gemInfoMap;
 }
